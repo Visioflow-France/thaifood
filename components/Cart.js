@@ -13,6 +13,7 @@ export default function Cart() {
     setOpen,
     step,
     goCart,
+    goCheckout,
     updateQty,
     removeItem,
     count,

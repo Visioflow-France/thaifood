@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { buildOrder, saveOrder, OrderError } from '../../../lib/orders';
+import { buildOrder, saveOrder, OrderError, isStripeActive } from '../../../lib/orders';
+import { getStripe, getRequestOrigin } from '../../../lib/stripe';
+import { getSettings, getCommissionPercent } from '../../../lib/settings';
 
 export const runtime = 'nodejs';
 // Toujours dynamique : on écrit dans un fichier, jamais de cache.
@@ -10,31 +12,73 @@ export async function POST(req) {
     const payload = await req.json().catch(() => ({}));
     const order = buildOrder(payload);
 
-    // ========================================================================
-    //  🔌 STRIPE — branchement futur du paiement en ligne
-    // ------------------------------------------------------------------------
-    //  Quand vous aurez vos clés Stripe (STRIPE_SECRET_KEY), créez ici le
-    //  PaymentIntent AVANT la persistance :
+    // ----------------------------------------------------------------------
+    //  PAIEMENT EN LIGNE (Stripe Connect Express).
+    //  Si Stripe est configuré + un compte restaurateur est connecté :
+    //  on crée une Stripe Checkout Session (destination charge vers le compte
+    //  du restaurateur + commission plateforme). Le client est ensuite
+    //  redirigé vers la page Stripe, puis revient sur /commande?ref=…
+    //  Le webhook Stripe confirme le paiement (statut -> 'paid').
     //
-    //    import Stripe from 'stripe';
-    //    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    //    const intent = await stripe.paymentIntents.create({
-    //      amount: Math.round(order.total * 100),   // Stripe compte en centimes
-    //      currency: 'eur',
-    //      automatic_payment_methods: { enabled: true },
-    //      metadata: { ref: order.ref, id: order.id },
-    //    });
-    //    order.paymentIntentId = intent.id;
-    //    order.status = 'awaiting_payment';
-    //
-    //  Puis renvoyez `intent.client_secret` au client (en plus de l'order)
-    //  pour qu'il confirme le paiement avec Stripe.js côté navigateur.
-    //  Tant que Stripe n'est pas branché, la commande est enregistrée
-    //  « reçue » et réglée sur place / à la livraison.
-    // ========================================================================
+    //  Sinon : comportement historique (commande enregistrée « reçue »,
+    //  réglée sur place / à la livraison).
+    // ----------------------------------------------------------------------
+    if (await isStripeActive()) {
+      const stripe = getStripe();
+      const settings = await getSettings();
+      const origin = getRequestOrigin(req);
 
+      const amount = Math.max(50, Math.round(order.total * 100)); // EUR, min Stripe = 0,50€
+      const fee = Math.round((amount * getCommissionPercent()) / 100);
+
+      let session;
+      try {
+        session = await stripe.checkout.sessions.create({
+          mode: 'payment',
+          locale: 'fr',
+          currency: 'eur',
+          line_items: [
+            {
+              quantity: 1,
+              price_data: {
+                currency: 'eur',
+                unit_amount: amount,
+                product_data: {
+                  name: `Commande ${order.ref}`,
+                  description: order.items.map((i) => `${i.qty}× ${i.name}`).join(' · ').slice(0, 200),
+                },
+              },
+            },
+          ],
+          payment_intent_data: {
+            // Destination charge : l'argent part sur le compte du restaurateur,
+            // la plateforme prélève sa commission (application_fee_amount).
+            application_fee_amount: fee,
+            transfer_data: { destination: settings.connectedAccountId },
+            metadata: { ref: order.ref, id: order.id },
+          },
+          metadata: { ref: order.ref, id: order.id },
+          customer_email: order.customer.email || undefined,
+          success_url: `${origin}/commande?ref=${order.ref}`,
+          cancel_url: `${origin}/commande?ref=${order.ref}&status=cancel`,
+        });
+      } catch (e) {
+        console.error('[orders] Stripe session error:', e.message);
+        return NextResponse.json(
+          { ok: false, error: 'Paiement en ligne indisponible, réessayez.' },
+          { status: 502 }
+        );
+      }
+
+      order.status = 'awaiting_payment';
+      order.checkoutSessionId = session.id;
+      await saveOrder(order);
+
+      return NextResponse.json({ ok: true, order, checkoutUrl: session.url }, { status: 201 });
+    }
+
+    // Mode « paiement sur place » (Stripe désactivé).
     await saveOrder(order);
-
     return NextResponse.json({ ok: true, order }, { status: 201 });
   } catch (e) {
     if (e instanceof OrderError) {

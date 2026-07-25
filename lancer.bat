@@ -27,7 +27,7 @@ node -v
 REM --- Installation des dependances si necessaire ---
 if not exist "node_modules" (
     echo.
-    echo Installation des dependances (premier lancement, cela peut prendre quelques minutes)...
+    echo Installation des dependances ^(premier lancement, cela peut prendre quelques minutes^)...
     echo.
     call npm install
     if errorlevel 1 (
@@ -46,13 +46,13 @@ echo.
 echo Demarrage du serveur...
 echo Le site s'ouvrira automatiquement dans votre navigateur a l'adresse :
 echo.
-echo    http://localhost:3000
+echo    http://localhost:2000
 echo.
 echo Pour arreter le serveur : fermez cette fenetre ou appuyez sur Ctrl+C.
 echo.
 
-REM --- Ouvre le navigateur apres un court delai (le temps que le serveur demarre) ---
-start "" powershell -WindowStyle Hidden -Command "Start-Sleep -Seconds 6; Start-Process 'http://localhost:3000'"
+REM --- Ouvre le navigateur quand le serveur est pret (attend que localhost:2000 reponde) ---
+start "" powershell -NoProfile -WindowStyle Hidden -Command "for($i=0;$i -lt 60;$i++){try{$r=Invoke-WebRequest 'http://localhost:2000' -UseBasicParsing -TimeoutSec 2;Start-Process 'http://localhost:2000';break}catch{Start-Sleep 2}}"
 
 REM --- Lance le serveur de developpement Next.js ---
 call npm run dev

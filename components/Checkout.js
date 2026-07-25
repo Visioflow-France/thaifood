@@ -39,12 +39,25 @@ export default function Checkout() {
   const [serverError, setServerError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [minWhen, setMinWhen] = useState('');
+  const [onlinePayment, setOnlinePayment] = useState(false);
 
   // `min` du champ datetime-local = maintenant (côté navigateur seulement).
   useEffect(() => {
     const d = new Date();
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
     setMinWhen(d.toISOString().slice(0, 16));
+  }, []);
+
+  // Paiement en ligne actif ? (sinon : règlement sur place / à la livraison)
+  useEffect(() => {
+    let active = true;
+    fetch('/api/config', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => active && setOnlinePayment(!!j.onlinePayment))
+      .catch(() => active && setOnlinePayment(false));
+    return () => {
+      active = false;
+    };
   }, []);
 
   const totals = computeTotals(items, type);
@@ -269,17 +282,22 @@ export default function Checkout() {
           {submitting ? (
             <>
               <iconify-icon icon="solar:spinner-round-linear" className="text-base animate-spin" />
-              Enregistrement…
+              {onlinePayment ? 'Redirection vers le paiement…' : 'Enregistrement…'}
             </>
           ) : (
             <>
-              <iconify-icon icon="solar:check-circle-linear" className="text-base" />
-              Confirmer la commande · {formatPrice(totals.total)}
+              <iconify-icon
+                icon={onlinePayment ? 'solar:card-transfer-linear' : 'solar:check-circle-linear'}
+                className="text-base"
+              />
+              {onlinePayment ? 'Confirmer & payer' : 'Confirmer la commande'} · {formatPrice(totals.total)}
             </>
           )}
         </button>
         <p className="text-[11px] text-cream-50/30 text-center mt-3 leading-relaxed">
-          Vous serez recontacté(e) pour confirmation. Règlement sur place ou à la livraison.
+          {onlinePayment
+            ? 'Paiement sécurisé par Stripe · vous serez redirigé(e) pour régler.'
+            : 'Vous serez recontacté(e) pour confirmation. Règlement sur place ou à la livraison.'}
         </p>
       </div>
     </form>

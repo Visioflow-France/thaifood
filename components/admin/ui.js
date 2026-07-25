@@ -99,7 +99,7 @@ export function Toggle({ checked, onChange, label }) {
   );
 }
 
-// Champ image : URL au choix OU upload depuis l'ordinateur.
+// Champ image : URL, fichier, ou photo (caméra sur mobile).
 export function ImagePicker({ value, onChange }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -117,8 +117,13 @@ export function ImagePicker({ value, onChange }) {
       setErr(e.message);
     } finally {
       setBusy(false);
+      e.target.value = ''; // permet de rechoisir le même fichier
     }
   }
+
+  const btn =
+    'px-3 py-1.5 rounded-lg text-xs font-medium bg-white/[0.05] border border-white/10 text-cream-50/80 hover:bg-white/[0.1] cursor-pointer inline-flex items-center gap-1.5';
+  const btnCls = busy ? `${btn} opacity-50 pointer-events-none` : btn;
 
   return (
     <div className="space-y-2">
@@ -134,10 +139,36 @@ export function ImagePicker({ value, onChange }) {
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
       />
-      <div className="flex items-center gap-3">
-        <label className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/[0.05] border border-white/10 text-cream-50/80 hover:bg-white/[0.1] cursor-pointer">
-          {busy ? 'Envoi…' : '⬆ Uploader un fichier'}
+      <div className="flex flex-wrap items-center gap-2">
+        <label className={btnCls}>
+          {busy ? (
+            'Envoi…'
+          ) : (
+            <>
+              <iconify-icon icon="solar:gallery-linear" className="text-sm" />
+              Fichier
+            </>
+          )}
           <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={busy} />
+        </label>
+        {/* capture="environment" → ouvre l'appareil photo sur mobile */}
+        <label className={btnCls}>
+          {busy ? (
+            'Envoi…'
+          ) : (
+            <>
+              <iconify-icon icon="solar:camera-linear" className="text-sm" />
+              Photo
+            </>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleFile}
+            disabled={busy}
+          />
         </label>
         {err && <span className="text-xs text-red-300">{err}</span>}
       </div>

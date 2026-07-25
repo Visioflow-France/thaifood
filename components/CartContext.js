@@ -111,6 +111,13 @@ export function CartProvider({ children }) {
         if (!res.ok || !data.ok) {
           return { ok: false, error: data.error || 'Erreur lors de la validation.' };
         }
+        // Paiement en ligne (Stripe) : redirection vers la page de paiement.
+        // On garde le panier intact (localStorage) pour permettre un retour en
+        // cas d'annulation ; il sera vidé sur la page de confirmation si payé.
+        if (data.checkoutUrl && typeof window !== 'undefined') {
+          window.location.href = data.checkoutUrl;
+          return { ok: true, order: data.order, redirecting: true };
+        }
         setLastOrder(data.order);
         setItems([]);
         setStep('success');

@@ -1,15 +1,18 @@
 import { NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { verifySession } from '../../../../lib/auth';
+import { getBucket } from '../../../../lib/firebase-admin';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const ALLOWED_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'];
 const MAX_BYTES = 5 * 1024 * 1024; // 5 Mo
 
-// Upload d'une image depuis le dashboard. Le fichier est stocké dans
-// /public/uploads et renvoie une URL utilisable directement comme image de plat.
+// Upload d'une image depuis le dashboard → Firebase Storage (plus de disque
+// local, qui ne persiste pas sur Vercel). Renvoie une URL publique utilisable
+// directement comme image de plat.
+// ⚠️ Nécessite une règle Storage « allow read: if true; » (lecture publique)
+//    pour que les images s'affichent sur le site. Voir le README.
 export async function POST(req) {
   if (!verifySession(req)) {
     return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
@@ -34,10 +37,19 @@ export async function POST(req) {
   const stamp = Date.now().toString(36);
   const rand = Math.random().toString(36).slice(2, 7);
   const filename = `up_${stamp}_${rand}.${ext}`;
+  const filepath = `menu/${filename}`;
 
-  const dir = path.join(process.cwd(), 'public', 'uploads');
-  await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(path.join(dir, filename), Buffer.from(bytes));
-
-  return NextResponse.json({ ok: true, url: `/uploads/${filename}` });
+  try {
+    const bucket = getBucket();
+    await bucket.file(filepath).save(Buffer.from(bytes), {
+      metadata: { contentType: file.type || `image/${ext === 'jpg' ? 'jpeg' : ext}` },
+    });
+    const url = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(
+      filepath
+    )}?alt=media`;
+    return NextResponse.json({ ok: true, url });
+  } catch (e) {
+    console.error('[upload] Storage error:', e.message);
+    return NextResponse.json({ error: 'Upload impossible.' }, { status: 500 });
+  }
 }

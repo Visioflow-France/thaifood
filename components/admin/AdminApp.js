@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import DishManager from './DishManager';
 import CategoryManager from './CategoryManager';
 import PromoManager from './PromoManager';
+import StripeManager from './StripeManager';
 import { Btn, Input } from './ui';
 
 export default function AdminApp() {
@@ -65,6 +66,7 @@ export default function AdminApp() {
     { id: 'dishes', label: 'Plats', icon: 'solar:plate-linear' },
     { id: 'categories', label: 'Catégories', icon: 'solar:widget-linear' },
     { id: 'promos', label: 'Promotions', icon: 'solar:tag-price-linear' },
+    { id: 'payment', label: 'Paiement', icon: 'solar:card-transfer-linear' },
   ];
 
   return (
@@ -117,6 +119,7 @@ export default function AdminApp() {
       {tab === 'promos' && (
         <PromoManager promos={data.promos} dishes={data.dishes} categories={data.categories} reload={reload} />
       )}
+      {tab === 'payment' && <StripeManager />}
     </Shell>
   );
 }
