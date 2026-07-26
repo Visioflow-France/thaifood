@@ -32,7 +32,7 @@ Depuis le dashboard, vous pouvez :
 - **Plats** : créer, modifier (nom, prix, image, description, badge, catégorie, ordre), masquer/afficher ou supprimer un plat. L'image peut être **une URL** ou **un fichier uploadé** depuis l'ordinateur.
 - **Catégories** : créer, renommer, réordonner ou supprimer des catégories (par défaut : Entrées, Plats principaux, Desserts, Boissons).
 - **Promotions** : créer une promo **en pourcentage** (ex. -20 %) ou **à prix fixe** (ex. 12 €), applicable à **tous les plats**, à **une catégorie**, ou à **un plat précis**. L'ancien prix est barré sur le site et la remise est appliquée dans le panier.
-- **Paiement** : connecter le compte Stripe du restaurateur (Stripe Connect Express) et suivre son état (actif / à finaliser). *(La commission plateforme, elle, est réglée par la plateforme dans `.env.local` — voir la section « Paiement en ligne » ci-dessous.)*
+- **Paiement** : connecter le compte Stripe du restaurateur (Stripe Connect, compte **Standard**) et suivre son état (actif / à finaliser). *(La commission plateforme, elle, est réglée par la plateforme dans `.env.local` — voir la section « Paiement en ligne » ci-dessous.)*
 
 > ⏱ **Temps réel** : toute modification apparaît sur le site sans rechargement (le menu se rafraîchit automatiquement toutes les 15 s et au retour sur l'onglet).
 
@@ -55,7 +55,7 @@ npm run start    # démarre le serveur de production
 
 ## 💳 Paiement en ligne (Stripe)
 
-Le site accepte le **paiement par carte** via **Stripe Connect Express** : le restaurateur connecte *son* compte Stripe (l'argent lui arrive directement), et une **commission plateforme** peut être prélevée automatiquement à chaque commande.
+Le site accepte le **paiement par carte** via **Stripe Connect (compte Standard)** : le restaurateur connecte *son* compte Stripe (l'argent lui arrive directement, et **c'est lui qui porte les pertes**), et une **commission plateforme** peut être prélevée automatiquement à chaque commande.
 
 > Sans Stripe configuré, le site reste en mode **« paiement sur place / à la livraison »** : rien ne casse. Le paiement en ligne s'active dès que les clés sont en place et le compte connecté.
 
@@ -162,7 +162,7 @@ Ajoutez les **mêmes** variables d'environnement Firebase dans les **paramètres
 ## ✨ Fonctionnalités
 
 - 🛒 Panier complet (ajout, quantités, suppression, total, confirmation)
-- 💳 Paiement en ligne par carte (Stripe Connect Express, commission plateforme optionnelle)
+- 💳 Paiement en ligne par carte (Stripe Connect Standard, commission plateforme optionnelle)
 - 📅 Formulaire de réservation avec confirmation
 - 📱 Menu mobile + design responsive
 - 🎬 Animations au défilement

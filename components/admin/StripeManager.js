@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Btn, Card } from './ui';
 
 // ============================================================================
-//  Onglet « Paiement » du dashboard — Stripe Connect Express.
+//  Onglet « Paiement » du dashboard — Stripe Connect (compte Standard).
 //  Vue RESTAURATEUR : connexion + statut de SON compte Stripe.
 //  (La commission plateforme est un réglage de la plateforme, dans .env.local,
 //   elle n'apparaît pas ici.)

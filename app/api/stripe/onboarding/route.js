@@ -26,15 +26,14 @@ export async function POST(req) {
   try {
     let settings = await getSettings();
 
-    // 1) Création du compte Express (une seule fois).
+    // 1) Création du compte Standard (une seule fois).
+    //    Standard : c'est le RESTAURATEUR qui porte les pertes (litiges, fraude),
+    //    pas la plateforme. Inscription un peu plus complète, mais même commission
+    //    et mêmes moyens de paiement (carte, Apple Pay, Google Pay…).
     if (!settings.connectedAccountId) {
       const acct = await stripe.accounts.create({
-        type: 'express',
+        type: 'standard',
         country: 'FR',
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true },
-        },
       });
       settings = await saveSettings({ connectedAccountId: acct.id });
     }
