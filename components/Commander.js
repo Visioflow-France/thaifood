@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Img from './Img';
 import useReveal from './useReveal';
 import { useCart } from './CartContext';
@@ -8,10 +8,12 @@ import useMenu from './useMenu';
 import { applyPromo, getApplicablePromo, formatPrice, promoLabel } from '../lib/pricing';
 
 export default function Commander() {
-  const ref = useReveal();
   const { addToCart } = useCart();
   const { categories, dishes, promos, loading } = useMenu();
   const [activeCat, setActiveCat] = useState('all');
+  // Ré-observe les cartes .reveal à chaque changement de catégorie :
+  // sans ça, les nouvelles cartes restent à opacity:0 (invisible).
+  const ref = useReveal([activeCat]);
 
   const cats = [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
@@ -99,6 +101,18 @@ function FilterPill({ active, onClick, children }) {
 function DishCard({ dish, promos, index, onAdd }) {
   const promo = getApplicablePromo(dish, promos);
   const { finalPrice, hasPromo, originalPrice } = applyPromo(dish.price, promo);
+  const [added, setAdded] = useState(false);
+  const resetTimer = useRef(null);
+
+  // Lève le timeout si la carte est démontée (changement de catégorie).
+  useEffect(() => () => clearTimeout(resetTimer.current), []);
+
+  const handleAdd = () => {
+    onAdd();
+    setAdded(true);
+    clearTimeout(resetTimer.current);
+    resetTimer.current = setTimeout(() => setAdded(false), 1400);
+  };
 
   return (
     <div
@@ -137,12 +151,19 @@ function DishCard({ dish, promos, index, onAdd }) {
           {dish.desc}
         </p>
         <button
-          onClick={onAdd}
-          className="add-btn w-full py-2.5 rounded-xl border border-gold-400/30 text-gold-400 text-sm font-medium flex items-center justify-center gap-2"
+          onClick={handleAdd}
+          className={`add-btn w-full py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-medium ${
+            added ? 'add-btn-done' : ''
+          }`}
           aria-label={`Ajouter ${dish.name} au panier`}
         >
-          <iconify-icon icon="solar:add-circle-linear" className="text-base" />
-          Ajouter
+          <span className="relative z-[1] flex items-center justify-center gap-2">
+            <iconify-icon
+              icon={added ? 'solar:check-circle-bold' : 'solar:add-circle-linear'}
+              className="text-base"
+            />
+            {added ? 'Ajouté' : 'Ajouter'}
+          </span>
         </button>
       </div>
     </div>

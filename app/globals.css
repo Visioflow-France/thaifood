@@ -183,15 +183,45 @@ img.loaded { opacity: 1; }
   .hero-bg { background-attachment: scroll; }
 }
 
-/* Bouton « Ajouter » des cartes plats */
-.add-btn { transition: all 0.3s ease; }
+/* Bouton « Ajouter » des cartes plats — contour raffiné */
+.add-btn {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(201,169,110,0.38);
+  color: #c9a96e;
+  background: rgba(201,169,110,0.03);
+  transition: color 0.35s cubic-bezier(0.16,1,0.3,1),
+              border-color 0.35s ease,
+              box-shadow 0.35s ease,
+              transform 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+/* Panneau doré qui se révèle au survol (sous le texte) */
+.add-btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, #c9a96e, #b8943e);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
 .add-btn:hover {
-  background: #c9a96e;
   color: #0A1C0A;
   border-color: #c9a96e;
-  box-shadow: 0 8px 24px rgba(201,169,110,0.25);
+  box-shadow: 0 10px 26px rgba(201,169,110,0.28),
+              inset 0 0 0 1px rgba(201,169,110,0.25);
   transform: translateY(-1px);
 }
+.add-btn:hover::before { opacity: 1; }
+.add-btn:active { transform: translateY(0) scale(0.985); }
+
+/* État « Ajouté » — confirmation verte (prioritaire sur le survol) */
+.add-btn-done,
+.add-btn-done:hover {
+  border-color: rgba(123,190,123,0.65) !important;
+  color: #7bbe7b !important;
+  background: rgba(123,190,123,0.06) !important;
+  box-shadow: 0 0 0 3px rgba(123,190,123,0.12) !important;
+}
+.add-btn-done::before { opacity: 0 !important; }
 
 /* Anneau pulsé autour du cochage de confirmation */
 @keyframes pingSlow {
