@@ -6,7 +6,6 @@ import { useCart } from './CartContext';
 const LINKS = [
   { href: '#histoire', label: 'Notre Histoire' },
   { href: '#commander', label: 'Commander' },
-  { href: '#reserver', label: 'Réserver' },
   { href: '#avis', label: 'Avis' },
 ];
 

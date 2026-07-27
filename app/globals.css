@@ -6,13 +6,13 @@
 html { scroll-behavior: smooth; }
 body {
   font-family: 'Inter', sans-serif;
-  background: #2B6E2B;
+  background: #141414;
   color: #f5f0e8;
   overflow-x: hidden;
 }
 
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #235823; }
+::-webkit-scrollbar-track { background: #0d0d0d; }
 ::-webkit-scrollbar-thumb { background: #c9a96e; border-radius: 3px; }
 
 .hero-bg {
@@ -26,7 +26,7 @@ body {
   background: linear-gradient(90deg, #c9a96e 0%, #f5e5b8 40%, #c9a96e 80%);
   background-size: 200% auto;
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-background-fill-color: transparent;
   animation: shimmer 4s linear infinite;
 }
 @keyframes shimmer { to { background-position: 200% center; } }
@@ -50,7 +50,7 @@ body {
 .plus-btn { transition: all 0.3s ease; }
 .plus-btn:hover {
   background: #c9a96e;
-  color: #173A17;
+  color: #0d0d0d;
   box-shadow: 0 0 20px rgba(201,169,110,0.3);
   transform: scale(1.1);
 }
@@ -87,11 +87,11 @@ body {
 .nav-blur {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  background: rgba(43,110,43,0.7);
+  background: rgba(20,20,20,0.72);
   border-bottom: 1px solid rgba(201,169,110,0.08);
 }
 .nav-blur.scrolled {
-  background: rgba(35,88,35,0.95);
+  background: rgba(10,10,10,0.95);
   border-bottom-color: rgba(201,169,110,0.15);
 }
 
@@ -119,7 +119,7 @@ body {
 
 .cta-primary {
   background: linear-gradient(135deg, #c9a96e, #b8943e);
-  color: #173A17;
+  color: #0d0d0d;
   transition: all 0.4s ease;
   position: relative; overflow: hidden;
 }
@@ -157,14 +157,14 @@ img { opacity: 0; transition: opacity 0.6s ease; }
 img.loaded { opacity: 1; }
 
 /* Conteneur d'image : placeholder visible pendant le chargement + repli. */
-.img-wrap { background: #0e1f0e; }
+.img-wrap { background: #0d0d0d; }
 .img-ph {
   background:
-    radial-gradient(circle at 50% 38%, rgba(201,169,110,0.12), rgba(14,31,14,0) 62%),
-    linear-gradient(135deg, #163a16 0%, #0c1f0c 100%);
+    radial-gradient(circle at 50% 38%, rgba(201,169,110,0.12), rgba(20,20,20,0) 62%),
+    linear-gradient(135deg, #1f1f1f 0%, #0d0d0d 100%);
 }
 .img-fallback {
-  background: linear-gradient(135deg, #1c3a1c 0%, #112B11 100%);
+  background: linear-gradient(135deg, #1f1f1f 0%, #121212 100%);
 }
 
 .mobile-menu {
@@ -204,7 +204,7 @@ img.loaded { opacity: 1; }
   transition: opacity 0.35s ease;
 }
 .add-btn:hover {
-  color: #0A1C0A;
+  color: #0d0d0d;
   border-color: #c9a96e;
   box-shadow: 0 10px 26px rgba(201,169,110,0.28),
               inset 0 0 0 1px rgba(201,169,110,0.25);
@@ -213,13 +213,13 @@ img.loaded { opacity: 1; }
 .add-btn:hover::before { opacity: 1; }
 .add-btn:active { transform: translateY(0) scale(0.985); }
 
-/* État « Ajouté » — confirmation verte (prioritaire sur le survol) */
+/* État « Ajouté » — confirmation dorée sobre (prioritaire sur le survol) */
 .add-btn-done,
 .add-btn-done:hover {
-  border-color: rgba(123,190,123,0.65) !important;
-  color: #7bbe7b !important;
-  background: rgba(123,190,123,0.06) !important;
-  box-shadow: 0 0 0 3px rgba(123,190,123,0.12) !important;
+  border-color: rgba(201,169,110,0.65) !important;
+  color: #c9a96e !important;
+  background: rgba(201,169,110,0.06) !important;
+  box-shadow: 0 0 0 3px rgba(201,169,110,0.12) !important;
 }
 .add-btn-done::before { opacity: 0 !important; }
 
@@ -235,9 +235,9 @@ iconify-icon.animate-spin { animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Options des champs select / datetime sur fond sombre */
-.form-input option { background: #112B11; color: #f5f0e8; }
+.form-input option { background: #141414; color: #f5f0e8; }
 
-/* Accessibilité : focus visible doré sur les éléments cliquables */
+/* Accèsibilité : focus visible doré sur les éléments cliquables */
 button:focus-visible, a:focus-visible {
   outline: 2px solid rgba(201,169,110,0.6);
   outline-offset: 2px;

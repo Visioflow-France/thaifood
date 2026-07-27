@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 const SCHEDULE = [
   { day: 'Lundi', hours: 'Fermé', closed: true },
   { day: 'Mar – Ven', hours: '11h30 – 14h00' },
@@ -15,11 +17,19 @@ const SOCIALS = [
 ];
 
 export default function Footer() {
+  const [phone, setPhone] = useState('');
+
+  useEffect(() => {
+    fetch('/api/site', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => setPhone(j.phone || ''))
+      .catch(() => {});
+  }, []);
+
+  const tel = phone.replace(/[^\d+]/g, '');
+
   return (
-    <footer
-      className="border-t border-white/[0.06] pt-16 pb-8"
-      style={{ backgroundColor: '#0A1C0A' }}
-    >
+    <footer className="bg-th-950 border-t border-white/[0.06] pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-5 sm:px-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
           <div className="md:col-span-4">
@@ -70,9 +80,13 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2">
                 <iconify-icon icon="solar:phone-linear" className="text-gold-400" />
-                <a href="tel:+33164375500" className="hover:text-gold-400 transition-colors">
-                  01 64 37 55 00
-                </a>
+                {phone ? (
+                  <a href={`tel:${tel}`} className="hover:text-gold-400 transition-colors">
+                    {phone}
+                  </a>
+                ) : (
+                  <span className="text-cream-50/20">À définir</span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <iconify-icon icon="solar:letter-linear" className="text-gold-400" />
@@ -88,9 +102,12 @@ export default function Footer() {
           <p className="text-xs text-cream-50/30">
             © {new Date().getFullYear()} Thaï Food 77. Tous droits réservés.
           </p>
-          <p className="text-xs text-cream-50/30">
-            Fait avec passion à Pontault-Combault.
-          </p>
+          <div className="flex items-center gap-5 text-xs text-cream-50/30">
+            <a href="/mentions-legales" className="hover:text-gold-400 transition-colors">
+              Mentions légales
+            </a>
+            <span className="hidden sm:inline">Fait avec passion à Pontault-Combault.</span>
+          </div>
         </div>
       </div>
     </footer>

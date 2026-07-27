@@ -273,7 +273,7 @@ export function QtyStepper({ value, onInc, onDec, size = 'sm' }) {
     <div className="flex items-center gap-2.5">
       <button
         onClick={onDec}
-        className={`${dim} rounded-full border border-white/10 text-cream-50/60 hover:border-gold-400/50 hover:text-gold-400 transition-all flex items-center justify-center`}
+        className={`${dim} rounded-full border border-gold-400/40 text-gold-400 hover:bg-gold-400/10 hover:border-gold-400 transition-all flex items-center justify-center`}
         aria-label="Diminuer"
       >
         <iconify-icon icon="solar:minus-linear" className={icon} />
@@ -281,7 +281,7 @@ export function QtyStepper({ value, onInc, onDec, size = 'sm' }) {
       <span className={`text-sm text-cream-50 w-5 text-center font-medium`}>{value}</span>
       <button
         onClick={onInc}
-        className={`${dim} rounded-full border border-white/10 text-cream-50/60 hover:border-gold-400/50 hover:text-gold-400 transition-all flex items-center justify-center`}
+        className={`${dim} rounded-full border border-gold-400/40 text-gold-400 hover:bg-gold-400/10 hover:border-gold-400 transition-all flex items-center justify-center`}
         aria-label="Augmenter"
       >
         <iconify-icon icon="solar:add-linear" className={icon} />
