@@ -5,6 +5,7 @@ import DishManager from './DishManager';
 import CategoryManager from './CategoryManager';
 import PromoManager from './PromoManager';
 import StripeManager from './StripeManager';
+import SiteManager from './SiteManager';
 import { Btn, Input } from './ui';
 
 export default function AdminApp() {
@@ -67,6 +68,7 @@ export default function AdminApp() {
     { id: 'categories', label: 'Catégories', icon: 'solar:widget-linear' },
     { id: 'promos', label: 'Promotions', icon: 'solar:tag-price-linear' },
     { id: 'payment', label: 'Paiement', icon: 'solar:card-transfer-linear' },
+    { id: 'infos', label: 'Informations', icon: 'solar:info-circle-linear' },
   ];
 
   return (
@@ -120,6 +122,7 @@ export default function AdminApp() {
         <PromoManager promos={data.promos} dishes={data.dishes} categories={data.categories} reload={reload} />
       )}
       {tab === 'payment' && <StripeManager />}
+      {tab === 'infos' && <SiteManager />}
     </Shell>
   );
 }
