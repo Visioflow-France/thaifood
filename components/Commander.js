@@ -6,18 +6,43 @@ import useReveal from './useReveal';
 import { useCart } from './CartContext';
 import useMenu from './useMenu';
 import { applyPromo, getApplicablePromo, formatPrice, promoLabel } from '../lib/pricing';
+import { sectionsInUse, sectionOf } from '../lib/sections';
 import DishModal from './DishModal';
 
 export default function Commander() {
-  const ref = useReveal();
   const { addToCart } = useCart();
   const { categories, dishes, promos, loading } = useMenu();
+  const [activeSection, setActiveSection] = useState(null);
+  const [activeCat, setActiveCat] = useState('all');
   const [selected, setSelected] = useState(null);
 
   const cats = [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  // Sections réellement présentes dans la carte (thai, japonais, desserts,
+  // boissons… + « autres » seulement si une catégorie n'est rattachée à aucune).
+  const sections = sectionsInUse(cats);
+  const currentSection = sections.some((s) => s.id === activeSection)
+    ? activeSection
+    : sections[0]?.id;
+
+  const sectionCats = cats.filter((c) => sectionOf(c) === currentSection);
+  // Sous-filtres utiles seulement si la section contient plus d'une catégorie.
+  const showSubFilters = sectionCats.length > 1;
+
   const visibleDishes = dishes
     .filter((d) => d.available !== false)
+    .filter((d) => sectionCats.some((c) => c.id === d.categoryId))
+    .filter((d) => activeCat === 'all' || d.categoryId === activeCat)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  // Ré-observe les cartes .reveal à chaque changement de section/catégorie :
+  // sans ça, les nouvelles cartes restent à opacity:0 (invisible).
+  const ref = useReveal([currentSection, activeCat]);
+
+  const selectSection = (id) => {
+    setActiveSection(id);
+    setActiveCat('all');
+  };
 
   const quickAdd = (d) => {
     const { finalPrice } = applyPromo(d.price, getApplicablePromo(d, promos));
@@ -38,18 +63,36 @@ export default function Commander() {
           </p>
         </div>
 
-        {/* Navigation catégories (ancres) */}
-        {cats.length > 0 && (
-          <nav className="reveal reveal-delay-2 flex flex-wrap items-center justify-center gap-2.5 mb-14">
-            {cats.map((c) => (
-              <a
-                key={c.id}
-                href={`#cat-${c.id}`}
-                className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium bg-white/[0.03] text-cream-50/60 border border-white/[0.07] hover:text-gold-400 hover:border-gold-400/40 hover:bg-gold-400/[0.04] transition-all duration-300"
+        {/* Niveau 1 : onglets par cuisine */}
+        {sections.length > 0 && (
+          <div className="reveal reveal-delay-2 flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6">
+            {sections.map((s) => (
+              <SectionTab
+                key={s.id}
+                active={currentSection === s.id}
+                onClick={() => selectSection(s.id)}
               >
-                <span className="w-1 h-1 rounded-full bg-gold-400/50 group-hover:bg-gold-400 transition-colors" />
+                <span className="mr-1.5">{s.emoji}</span>
+                {s.label}
+              </SectionTab>
+            ))}
+          </div>
+        )}
+
+        {/* Niveau 2 : sous-filtres par catégorie (cuisine active) */}
+        {showSubFilters && (
+          <nav className="flex flex-wrap items-center justify-center gap-2.5 mb-14">
+            <FilterPill active={activeCat === 'all'} onClick={() => setActiveCat('all')}>
+              Tout
+            </FilterPill>
+            {sectionCats.map((c) => (
+              <FilterPill
+                key={c.id}
+                active={activeCat === c.id}
+                onClick={() => setActiveCat(c.id)}
+              >
                 {c.name}
-              </a>
+              </FilterPill>
             ))}
           </nav>
         )}
@@ -57,37 +100,20 @@ export default function Commander() {
         {loading && visibleDishes.length === 0 ? (
           <p className="text-center text-cream-50/40 font-light">Chargement de la carte…</p>
         ) : visibleDishes.length === 0 ? (
-          <p className="text-center text-cream-50/40 font-light">Aucun plat pour le moment.</p>
+          <p className="text-center text-cream-50/40 font-light">Aucun plat dans cette catégorie pour le moment.</p>
         ) : (
-          cats.map((cat) => {
-            const items = visibleDishes.filter((d) => d.categoryId === cat.id);
-            if (items.length === 0) return null;
-            return (
-              <div key={cat.id} id={`cat-${cat.id}`} className="mb-16 last:mb-0 scroll-mt-24">
-                <div className="flex items-center gap-4 mb-7">
-                  <h3 className="font-serif text-xl sm:text-2xl text-gold-400 whitespace-nowrap">
-                    {cat.name}
-                  </h3>
-                  <span className="flex-1 h-px bg-gradient-to-r from-gold-400/30 to-transparent" />
-                  <span className="text-xs text-cream-50/30">
-                    {items.length} plat{items.length > 1 ? 's' : ''}
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-                  {items.map((d, i) => (
-                    <DishCard
-                      key={d.id}
-                      dish={d}
-                      promos={promos}
-                      index={i}
-                      onOpen={() => setSelected(d)}
-                      onAdd={() => quickAdd(d)}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            {visibleDishes.map((d, i) => (
+              <DishCard
+                key={d.id}
+                dish={d}
+                promos={promos}
+                index={i}
+                onOpen={() => setSelected(d)}
+                onAdd={() => quickAdd(d)}
+              />
+            ))}
+          </div>
         )}
       </div>
 
@@ -95,6 +121,36 @@ export default function Commander() {
         <DishModal dish={selected} promos={promos} onClose={() => setSelected(null)} />
       )}
     </section>
+  );
+}
+
+function SectionTab({ active, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-5 py-2.5 rounded-full text-sm sm:text-base font-semibold transition-all border ${
+        active
+          ? 'bg-gold-400 text-th-950 border-gold-400 shadow-lg shadow-gold-400/10'
+          : 'bg-white/[0.04] text-cream-50/70 border-white/[0.07] hover:text-cream-50 hover:border-gold-400/40'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function FilterPill({ active, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
+        active
+          ? 'bg-gold-400 text-th-950 border-gold-400'
+          : 'bg-white/[0.04] text-cream-50/60 border-white/[0.07] hover:text-cream-50 hover:border-gold-400/40'
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 

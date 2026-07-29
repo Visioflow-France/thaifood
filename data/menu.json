@@ -1,165 +1,37 @@
 {
   "categories": [
-    {
-      "id": "entrees",
-      "name": "Entrées",
-      "order": 1
-    },
-    {
-      "id": "salades",
-      "name": "Salades",
-      "order": 2
-    },
-    {
-      "id": "soupes",
-      "name": "Soupes",
-      "order": 3
-    },
-    {
-      "id": "menus",
-      "name": "Menus",
-      "order": 4
-    },
-    {
-      "id": "bobun",
-      "name": "Bobun",
-      "order": 5
-    },
-    {
-      "id": "pad-thai",
-      "name": "Pad Thaï",
-      "order": 6
-    },
-    {
-      "id": "pad-see-yui",
-      "name": "Pad See Yui",
-      "order": 7
-    },
-    {
-      "id": "nouilles-sautees",
-      "name": "Nouilles Sautées",
-      "order": 8
-    },
-    {
-      "id": "khao-prat",
-      "name": "Khao Prat",
-      "order": 9
-    },
-    {
-      "id": "loc-lac",
-      "name": "Loc Lac",
-      "order": 10
-    },
-    {
-      "id": "riz",
-      "name": "Riz",
-      "order": 11
-    },
-    {
-      "id": "crevettes",
-      "name": "Crevettes",
-      "order": 12
-    },
-    {
-      "id": "specialites-boeuf",
-      "name": "Spécialités Bœuf",
-      "order": 13
-    },
-    {
-      "id": "specialites-poulet",
-      "name": "Spécialités Poulet",
-      "order": 14
-    },
-    {
-      "id": "specialites-thai",
-      "name": "Spécialités Thaï Food",
-      "order": 15
-    },
-    {
-      "id": "maki",
-      "name": "Maki",
-      "order": 16
-    },
-    {
-      "id": "saumon-roll",
-      "name": "Saumon Roll",
-      "order": 17
-    },
-    {
-      "id": "eggs-roll",
-      "name": "Eggs Roll",
-      "order": 18
-    },
-    {
-      "id": "crispy-roll",
-      "name": "Crispy Roll",
-      "order": 19
-    },
-    {
-      "id": "california-frits",
-      "name": "California Frits",
-      "order": 20
-    },
-    {
-      "id": "ice-rolls",
-      "name": "Ice Rolls",
-      "order": 21
-    },
-    {
-      "id": "maki-printemps",
-      "name": "Maki Printemps",
-      "order": 22
-    },
-    {
-      "id": "california",
-      "name": "California",
-      "order": 23
-    },
-    {
-      "id": "avocats-roll",
-      "name": "Avocats Roll",
-      "order": 24
-    },
-    {
-      "id": "sushi",
-      "name": "Sushi",
-      "order": 25
-    },
-    {
-      "id": "sashimi",
-      "name": "Sashimi",
-      "order": 26
-    },
-    {
-      "id": "chirashi",
-      "name": "Chirashi",
-      "order": 27
-    },
-    {
-      "id": "poke",
-      "name": "Poké",
-      "order": 28
-    },
-    {
-      "id": "specialite-japonaise",
-      "name": "Spécialité Japonaise",
-      "order": 29
-    },
-    {
-      "id": "menu-japonais",
-      "name": "Menu Japonais",
-      "order": 30
-    },
-    {
-      "id": "desserts",
-      "name": "Desserts",
-      "order": 31
-    },
-    {
-      "id": "boissons",
-      "name": "Boissons",
-      "order": 32
-    }
+    { "id": "entrees", "name": "Entrées", "section": "thai", "order": 1 },
+    { "id": "salades", "name": "Salades", "section": "thai", "order": 2 },
+    { "id": "soupes", "name": "Soupes", "section": "thai", "order": 3 },
+    { "id": "menus", "name": "Menus", "section": "thai", "order": 4 },
+    { "id": "bobun", "name": "Bobun", "section": "thai", "order": 5 },
+    { "id": "pad-thai", "name": "Pad Thaï", "section": "thai", "order": 6 },
+    { "id": "pad-see-yui", "name": "Pad See Yui", "section": "thai", "order": 7 },
+    { "id": "nouilles-sautees", "name": "Nouilles Sautées", "section": "thai", "order": 8 },
+    { "id": "khao-prat", "name": "Khao Prat", "section": "thai", "order": 9 },
+    { "id": "loc-lac", "name": "Loc Lac", "section": "thai", "order": 10 },
+    { "id": "riz", "name": "Riz", "section": "thai", "order": 11 },
+    { "id": "crevettes", "name": "Crevettes", "section": "thai", "order": 12 },
+    { "id": "specialites-boeuf", "name": "Spécialités Bœuf", "section": "thai", "order": 13 },
+    { "id": "specialites-poulet", "name": "Spécialités Poulet", "section": "thai", "order": 14 },
+    { "id": "specialites-thai", "name": "Spécialités Thaï Food", "section": "thai", "order": 15 },
+    { "id": "maki", "name": "Maki", "section": "japonais", "order": 16 },
+    { "id": "saumon-roll", "name": "Saumon Roll", "section": "japonais", "order": 17 },
+    { "id": "eggs-roll", "name": "Eggs Roll", "section": "japonais", "order": 18 },
+    { "id": "crispy-roll", "name": "Crispy Roll", "section": "japonais", "order": 19 },
+    { "id": "california-frits", "name": "California Frits", "section": "japonais", "order": 20 },
+    { "id": "ice-rolls", "name": "Ice Rolls", "section": "japonais", "order": 21 },
+    { "id": "maki-printemps", "name": "Maki Printemps", "section": "japonais", "order": 22 },
+    { "id": "california", "name": "California", "section": "japonais", "order": 23 },
+    { "id": "avocats-roll", "name": "Avocats Roll", "section": "japonais", "order": 24 },
+    { "id": "sushi", "name": "Sushi", "section": "japonais", "order": 25 },
+    { "id": "sashimi", "name": "Sashimi", "section": "japonais", "order": 26 },
+    { "id": "chirashi", "name": "Chirashi", "section": "japonais", "order": 27 },
+    { "id": "poke", "name": "Poké", "section": "japonais", "order": 28 },
+    { "id": "specialite-japonaise", "name": "Spécialité Japonaise", "section": "japonais", "order": 29 },
+    { "id": "menu-japonais", "name": "Menu Japonais", "section": "japonais", "order": 30 },
+    { "id": "desserts", "name": "Desserts", "section": "desserts", "order": 31 },
+    { "id": "boissons", "name": "Boissons", "section": "boissons", "order": 32 }
   ],
   "dishes": [
     {

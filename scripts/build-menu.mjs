@@ -19,10 +19,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.join(__dirname, '..', 'data', 'menu.json');
 const LOCAL_IMG_DIR = path.join(__dirname, '..', 'public', 'uploads', 'menu');
 
-const categories = catData.map(([id, name], i) => ({
+const categories = catData.map(([id, name, section], i) => ({
   id,
   name,
   order: i + 1,
+  // `section` (3e élément du tuple) rattache la catégorie à une cuisine pour
+  // la navigation par onglets du site (voir lib/sections.js). Optionnel.
+  ...(section ? { section } : {}),
 }));
 
 // Index des photos locales téléchargées par fetch-menu-images.mjs.

@@ -2,11 +2,16 @@
 
 import { useState } from 'react';
 import { api } from './api';
-import { Btn, Card, DebouncedInput, Field, Input } from './ui';
+import { Btn, Card, DebouncedInput, Field, Input, Select } from './ui';
+import { SECTIONS, OTHER_SECTION, sectionOf } from '../../lib/sections';
+
+// Toutes les sections proposées dans le sélecteur (ordre d'affichage).
+const SECTION_OPTIONS = [...SECTIONS, OTHER_SECTION];
 
 export default function CategoryManager({ categories, dishes, reload }) {
   const sorted = [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const [name, setName] = useState('');
+  const [section, setSection] = useState(SECTIONS[0].id);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -16,8 +21,9 @@ export default function CategoryManager({ categories, dishes, reload }) {
     setBusy(true);
     setError('');
     try {
-      await api('/api/admin/categories', 'POST', { name: name.trim() });
+      await api('/api/admin/categories', 'POST', { name: name.trim(), section });
       setName('');
+      setSection(SECTIONS[0].id);
       await reload();
     } catch (e) {
       setError(e.message);
@@ -62,6 +68,18 @@ export default function CategoryManager({ categories, dishes, reload }) {
                   />
                   <p className="text-[11px] text-cream-50/40 mt-1 flex items-center gap-1.5 flex-wrap">
                     <span>{count} plat(s)</span>
+                    <span className="text-cream-50/30">· cuisine</span>
+                    <Select
+                      value={sectionOf(c)}
+                      onChange={(e) => update(c, { section: e.target.value })}
+                      className="!w-auto !px-2 !py-0.5 text-xs"
+                    >
+                      {SECTION_OPTIONS.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.emoji} {s.label}
+                        </option>
+                      ))}
+                    </Select>
                     <span className="text-cream-50/30">· ordre</span>
                     <DebouncedInput
                       type="number"
@@ -87,6 +105,15 @@ export default function CategoryManager({ categories, dishes, reload }) {
           <form onSubmit={add} className="space-y-3">
             <Field label="Nom de la catégorie" hint="ex : Menu midi, Boissons, Desserts…">
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nouvelle catégorie" />
+            </Field>
+            <Field label="Cuisine / section" hint="Regroupe cette catégorie sous un onglet du site.">
+              <Select value={section} onChange={(e) => setSection(e.target.value)}>
+                {SECTION_OPTIONS.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.emoji} {s.label}
+                  </option>
+                ))}
+              </Select>
             </Field>
             {error && <p className="text-sm text-red-300">{error}</p>}
             <Btn type="submit" disabled={busy || !name.trim()}>{busy ? '…' : 'Ajouter'}</Btn>
