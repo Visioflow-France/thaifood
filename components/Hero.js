@@ -20,16 +20,18 @@ export default function Hero() {
           <div className="reveal section-label mb-6">
             Restaurant Thaïlandais — Pontault-Combault
           </div>
-          <h1 className="reveal reveal-delay-1 font-serif text-4xl sm:text-5xl md:text-7xl leading-[0.95] tracking-tight text-cream-50 mb-6">
-            Des saveurs du
-            <br />
-            <span className="text-shimmer italic">Siam</span> à votre
-            <br />
-            assiette
+          <h1 className="reveal reveal-delay-1 font-serif text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] leading-[1.02] tracking-tight text-cream-50 mb-3">
+            Restaurant <span className="text-shimmer italic">Thaï</span> à Pontault-Combault
           </h1>
-          <p className="reveal reveal-delay-2 text-base sm:text-lg text-cream-50/50 font-light leading-relaxed max-w-md mb-10">
-            L&apos;authenticité des marchés de Bangkok, sublimée dans chaque plat. Une
-            expérience culinaire qui transcende les frontières.
+          <p className="reveal reveal-delay-1 font-serif italic text-xl sm:text-2xl text-cream-50/60 mb-6">
+            Des saveurs du Siam à votre assiette
+          </p>
+          <p className="reveal reveal-delay-2 text-base sm:text-lg text-cream-50/55 font-light leading-relaxed max-w-xl mb-10">
+            À Pontault-Combault,{' '}
+            <strong className="font-medium text-cream-50/80">Thaï Food 77</strong> est le
+            restaurant thaï qui réveille la street food de Bangkok : recettes authentiques,
+            produits frais et <strong className="font-medium text-cream-50/80">fast food thaï</strong>{' '}
+            à emporter ou sur place, préparés à la commande.
           </p>
           <div className="reveal reveal-delay-3 flex flex-wrap gap-4">
             <a
@@ -55,7 +57,7 @@ export default function Hero() {
               <iconify-icon icon="solar:star-bold" className="text-gold-400 text-sm" />
               <iconify-icon icon="solar:star-bold" className="text-gold-400/50 text-sm" />
             </div>
-            <span className="text-xs text-cream-50/40">4,7 · 7 463 avis Google</span>
+            <span className="text-xs text-cream-50/40">4,7 · 463 avis Google</span>
           </div>
         </div>
       </div>

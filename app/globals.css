@@ -31,12 +31,15 @@ body {
 }
 @keyframes shimmer { to { background-position: 200% center; } }
 
-.reveal {
+/* Progressive enhancement : le masquage ne s'applique QUE si JS est actif
+   (classe `js` posée sur <html> par app/layout.js). Sans JS / pour un robot
+   d'indexation, le contenu reste visible (opacité 1) → indexation fiable. */
+html.js .reveal {
   opacity: 0;
   transform: translateY(40px);
   transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1);
 }
-.reveal.active { opacity: 1; transform: translateY(0); }
+html.js .reveal.active { opacity: 1; transform: translateY(0); }
 .reveal-delay-1 { transition-delay: 0.1s; }
 .reveal-delay-2 { transition-delay: 0.2s; }
 .reveal-delay-3 { transition-delay: 0.3s; }
@@ -153,8 +156,8 @@ body {
   pointer-events: none; z-index: 9999; opacity: 0.3;
 }
 
-img { opacity: 0; transition: opacity 0.6s ease; }
-img.loaded { opacity: 1; }
+html.js img { opacity: 0; transition: opacity 0.6s ease; }
+html.js img.loaded { opacity: 1; }
 
 /* Conteneur d'image : placeholder visible pendant le chargement + repli. */
 .img-wrap { background: #0d0d0d; }
