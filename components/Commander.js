@@ -12,13 +12,19 @@ import { isOpenNow, formatNextOpening } from '../lib/hours';
 import DishModal from './DishModal';
 
 export default function Commander() {
-  const { addToCart } = useCart();
+  const { addToCart, resyncWithMenu, hydrated } = useCart();
   const { categories, dishes, promos, loading } = useMenu();
   const site = useSite();
   const open = isOpenNow(site.hours);
   const [activeSection, setActiveSection] = useState(null);
   const [activeCat, setActiveCat] = useState('all');
   const [selected, setSelected] = useState(null);
+
+  // Resync panier (restauré depuis localStorage) avec le menu courant : corrige
+  // les prix périmés (promo/prix changés) et retire les plats indisponibles.
+  useEffect(() => {
+    if (hydrated) resyncWithMenu(dishes, promos);
+  }, [hydrated, dishes, promos, resyncWithMenu]);
 
   const cats = [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 

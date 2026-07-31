@@ -31,10 +31,11 @@ export async function POST(req) {
   try {
     await handleEvent(event);
   } catch (e) {
-    // On journalise et on répond 200 : on évite les rejeux infinis d'un
-    // événement qu'on ne sait pas traiter. (La commande est créée AVANT le
-    // paiement, donc elle existe toujours quand le webhook arrive.)
+    // On journalise et on répond 500 : Stripe rejourera l'événement (échec
+    // transitoire : quota Firestore, timeout…). Évite de perdre silencieusement
+    // le passage à 'paid' — la commande existe déjà (créée avant le paiement).
     console.error('[stripe/webhook] handler error:', event?.type, e.message);
+    return NextResponse.json({ error: 'Handler error.' }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

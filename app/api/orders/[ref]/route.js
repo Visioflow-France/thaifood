@@ -4,7 +4,11 @@ import { getOrderByRef } from '../../../../lib/orders';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// Suivi de commande par référence (ex: page "où en est ma commande ?").
+// Suivi public de commande par référence (page /commande après paiement Stripe).
+// ⚠️ Route SANS auth : on n'expose JAMAIS les données client (RGPD). Seuls les
+// champs nécessaires au suivi (statut, récap, totaux) sont renvoyés. Les PII
+// (nom, téléphone, e-mail, adresse) et les détails de paiement restent
+// strictement côté serveur / dashboard authentifié.
 export async function GET(_req, { params }) {
   const ref = params?.ref;
   if (!ref) {
@@ -20,5 +24,6 @@ export async function GET(_req, { params }) {
       { status: 404 }
     );
   }
-  return NextResponse.json({ ok: true, order });
+  const { customer, payment, failureReason, ...publicView } = order;
+  return NextResponse.json({ ok: true, order: publicView });
 }

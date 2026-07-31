@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifySession } from '../../../../../lib/auth';
-import { updateOrderStatus, markOrderPrinted } from '../../../../../lib/orders';
+import { updateOrderStatus, markOrderPrinted, ORDER_STATUSES } from '../../../../../lib/orders';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -24,6 +24,10 @@ export async function PATCH(req, { params }) {
   }
 
   if (typeof body.status === 'string') {
+    // Whitelist : n'accepte qu'un statut de l'énumération métier.
+    if (!ORDER_STATUSES.includes(body.status)) {
+      return NextResponse.json({ error: 'Statut invalide.' }, { status: 400 });
+    }
     const order = await updateOrderStatus(ref, body.status);
     if (!order) return NextResponse.json({ error: 'Commande introuvable.' }, { status: 404 });
     return NextResponse.json({ ok: true, order });

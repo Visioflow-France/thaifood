@@ -35,14 +35,15 @@ const STATUS = {
   cancelled: { label: 'Annulée', cls: 'bg-red-500/15 text-red-300 border-red-400/30' },
 };
 
-// Une commande n'est réellement « enregistrée » (affichée + imprimée) qu'une
-// fois le paiement confirmé. En paiement en ligne (Stripe), le webhook fait
-// passer le statut à 'paid'. Les commandes 'awaiting_payment' restent visibles
-// mais grises et ne déclenchent ni impression ni compteur « nouvelle ».
-const AUTO_PRINT_STATUSES = ['paid'];
+// Une commande déclenche l'alerte (impression auto + bip + compteur) dès qu'elle
+// est effective : en mode paiement sur place (statut 'received') comme en
+// paiement en ligne (statut 'paid' posé par le webhook Stripe). Les commandes
+// 'awaiting_payment' restent visibles mais grisées (paiement non finalisé).
+const AUTO_PRINT_STATUSES = ['received', 'paid'];
 
 const STATUS_OPTIONS = [
-  'received', 'paid', 'confirmed', 'preparing', 'ready', 'fulfilled', 'cancelled',
+  'received', 'awaiting_payment', 'paid', 'failed',
+  'confirmed', 'preparing', 'ready', 'fulfilled', 'cancelled',
 ];
 
 // --- Outils -----------------------------------------------------------------
@@ -477,7 +478,9 @@ export default function OrdersManager() {
   }
 
   const shown = orders.filter(inRange);
-  const newCount = orders.filter((o) => AUTO_PRINT_STATUSES.includes(o.status)).length;
+  const newCount = orders.filter(
+    (o) => AUTO_PRINT_STATUSES.includes(o.status) && !o.printedAt
+  ).length;
 
   return (
     <div>
@@ -593,7 +596,7 @@ export default function OrdersManager() {
 function OrderCard({ order, onStatusChange, onReprint }) {
   const c = order.customer || {};
   const st = STATUS[order.status] || { label: order.status, cls: 'bg-white/[0.06] text-cream-50/55 border-white/15' };
-  const isNew = order.status === 'paid';
+  const isNew = AUTO_PRINT_STATUSES.includes(order.status);
   const isPending = order.status === 'awaiting_payment';
 
   return (
@@ -633,11 +636,14 @@ function OrderCard({ order, onStatusChange, onReprint }) {
         </div>
         <div className="flex items-center gap-2">
           <Select
-            value={STATUS_OPTIONS.includes(order.status) ? order.status : 'received'}
+            value={order.status}
             onChange={(e) => onStatusChange(e.target.value)}
             className="py-1.5 text-xs w-auto min-w-[150px]"
           >
-            {STATUS_OPTIONS.map((s) => (
+            {(STATUS_OPTIONS.includes(order.status)
+              ? STATUS_OPTIONS
+              : [order.status, ...STATUS_OPTIONS]
+            ).map((s) => (
               <option key={s} value={s}>
                 {(STATUS[s]?.label) || s}
               </option>

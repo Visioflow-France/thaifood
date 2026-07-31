@@ -22,10 +22,7 @@ npm run dev      # démarre le serveur de développement
 
 Adresse : **http://localhost:2000/admin**
 
-| | |
-|---|---|
-| Identifiant | `adminthaifood` |
-| Mot de passe | `meilleurthai77` |
+> ⚠️ **Sécurité** : en production (`NODE_ENV=production`), le dashboard reste **désactivé** tant que vous ne définissez pas des identifiants et un secret de session forts et personnels (voir ci-dessous). Les anciennes valeurs par défaut publiées dans le dépôt sont **refusées** en production. En développement, des valeurs de commodité sont utilisées automatiquement.
 
 Depuis le dashboard, vous pouvez :
 
@@ -36,15 +33,17 @@ Depuis le dashboard, vous pouvez :
 
 > ⏱ **Temps réel** : toute modification apparaît sur le site sans rechargement (le menu se rafraîchit automatiquement toutes les 15 s et au retour sur l'onglet).
 
-### Changer les identifiants (optionnel)
+### Configurer les identifiants & le secret de session
 
-Par défaut les identifiants sont `adminthaifood` / `meilleurthai77`.
-Pour les modifier, créez un fichier **`.env.local`** à la racine (voir `.env.example`) :
+Créez un fichier **`.env.local`** à la racine (voir `.env.example`). **Obligatoire en production.**
 
 ```
-ADMIN_USERNAME=mon-nouveau-identifiant
-ADMIN_PASSWORD=mon-nouveau-mot-de-passe
+ADMIN_USERNAME=votre-identifiant          # à choisir
+ADMIN_PASSWORD=votre-mot-de-passe-fort    # à choisir
+SESSION_SECRET=                           # générer avec : openssl rand -hex 32
 ```
+
+> Le `SESSION_SECRET` signe le cookie de session admin. S'il est absent ou laissé à l'ancienne valeur par défaut en production, **aucune connexion ne sera possible** (fail-safe).
 
 ## 🏗️ Production
 

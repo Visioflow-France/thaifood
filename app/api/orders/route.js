@@ -3,6 +3,7 @@ import { buildOrder, saveOrder, OrderError, isStripeActive } from '../../../lib/
 import { getStripe, getRequestOrigin } from '../../../lib/stripe';
 import { getSettings, getCommissionPercent } from '../../../lib/settings';
 import { getSiteInfo } from '../../../lib/site';
+import { hasFirebaseConfig } from '../../../lib/firebase-admin';
 import { isOpenNow, formatNextOpening } from '../../../lib/hours';
 
 export const runtime = 'nodejs';
@@ -11,8 +12,17 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
   try {
+    // Les commandes nécessitent Firestore (pas de fallback, contrairement au
+    // menu). Si Firebase n'est pas configuré, on échoue proprement.
+    if (!hasFirebaseConfig()) {
+      return NextResponse.json(
+        { ok: false, error: 'Service de commande indisponible, réessayez.' },
+        { status: 503 }
+      );
+    }
+
     const payload = await req.json().catch(() => ({}));
-    const order = buildOrder(payload);
+    const order = await buildOrder(payload);
 
     // ------------------------------------------------------------------
     //  HORAIRES : on refuse la commande si le restaurant est fermé.

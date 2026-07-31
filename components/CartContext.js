@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { computeTotals } from '../lib/pricing';
+import { computeTotals, applyPromo, getApplicablePromo } from '../lib/pricing';
 
 const CartContext = createContext(null);
 
@@ -76,6 +76,27 @@ export function CartProvider({ children }) {
   }, []);
 
   const clearCart = useCallback(() => setItems([]), []);
+
+  // Resynchronise le panier avec le menu courant : met à jour les prix (notamment
+  // les promos actives) et retire les plats supprimés ou devenus indisponibles.
+  // Garantit que le total affiché correspond à ce qui sera facturé (le serveur
+  // recalcule de toute façon depuis le menu, ce correctif évite la surprise
+  // visuelle d'un panier périmé restauré depuis localStorage).
+  const resyncWithMenu = useCallback((dishes, promos) => {
+    if (!Array.isArray(dishes) || dishes.length === 0) return;
+    const byName = new Map();
+    for (const d of dishes) {
+      if (d && d.name) byName.set(String(d.name).trim().toLowerCase(), d);
+    }
+    setItems((prev) =>
+      prev.flatMap((i) => {
+        const dish = byName.get(String(i.name || '').trim().toLowerCase());
+        if (!dish || dish.available === false) return []; // plat disparu / indisponible
+        const { finalPrice } = applyPromo(dish.price, getApplicablePromo(dish, promos));
+        return [{ ...i, price: finalPrice }];
+      })
+    );
+  }, []);
 
   const openCart = useCallback(() => {
     setOpen(true);
@@ -158,6 +179,9 @@ export function CartProvider({ children }) {
       placeOrder,
       lastOrder,
       resetCheckout,
+      // Synchronisation panier <-> menu
+      hydrated,
+      resyncWithMenu,
     }),
     [
       items,
@@ -172,6 +196,8 @@ export function CartProvider({ children }) {
       placeOrder,
       lastOrder,
       resetCheckout,
+      hydrated,
+      resyncWithMenu,
     ]
   );
 
