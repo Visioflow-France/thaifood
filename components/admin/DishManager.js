@@ -127,7 +127,10 @@ export default function DishManager({ dishes, categories, reload }) {
         </div>
 
         <div className="mt-4">
-          <Field label="Image" hint="Collez une URL OU uploadez un fichier.">
+          <Field
+            label="Photo du plat"
+            hint="URL, fichier ou photo (mobile). Les envois sont stockés sur Firebase Storage."
+          >
             <ImagePicker value={editing.img} onChange={(url) => setEditing({ ...editing, img: url })} />
           </Field>
         </div>
@@ -156,13 +159,18 @@ export default function DishManager({ dishes, categories, reload }) {
   });
   const defaultCatForNew = filterCat !== 'all' ? filterCat : sortedCats[0]?.id;
 
+  // Vue groupée par défaut (sans recherche ni filtre). Sinon liste filtrée plate.
+  const grouped = filterCat === 'all' && !q;
+  const groupForCat = (catId) => filtered.filter((d) => d.categoryId === catId);
+  const uncategorized = filtered.filter((d) => !categories.some((c) => c.id === d.categoryId));
+
   return (
     <div>
       {/* Barre d'outils : recherche + filtre catégorie + ajout */}
       <div className="flex flex-col gap-3 mb-4">
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm text-cream-50/50">
-            {filtered.length} / {dishes.length} plat(s)
+            {dishes.length} plat(s) · {categories.length} catégorie(s)
           </p>
           <Btn onClick={() => setEditing({ ...blankDish(defaultCatForNew), isNew: true })}>+ Ajouter un plat</Btn>
         </div>
@@ -185,35 +193,103 @@ export default function DishManager({ dishes, categories, reload }) {
         </div>
       </div>
 
-      <div className="space-y-2">
-        {filtered.map((d) => (
-          <Card key={d.id} className="flex items-center gap-4">
-            <img src={d.img} alt="" className="w-14 h-14 rounded-lg object-cover bg-th-950 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="font-medium text-cream-50 truncate">{d.name}</h3>
-                {d.available === false && (
-                  <span className="text-[10px] uppercase tracking-wide bg-white/10 text-cream-50/50 px-2 py-0.5 rounded-full">masqué</span>
-                )}
+      {/* Vue groupée par catégorie (par défaut) */}
+      {grouped ? (
+        <div className="space-y-7">
+          {sortedCats.map((c) => {
+            const items = groupForCat(c.id);
+            if (items.length === 0) return null;
+            return (
+              <section key={c.id}>
+                <div className="flex items-center justify-between gap-3 mb-2 pb-2 border-b border-white/[0.07]">
+                  <h3 className="font-serif text-base text-gold-400 flex items-center gap-2">
+                    <iconify-icon icon="solar:widget-linear" className="text-base" />
+                    {c.name}
+                    <span className="text-xs text-cream-50/40 font-sans font-normal">({items.length})</span>
+                  </h3>
+                  <button
+                    onClick={() => setEditing({ ...blankDish(c.id), isNew: true })}
+                    className="text-xs text-cream-50/50 hover:text-gold-400 transition-colors flex items-center gap-1"
+                  >
+                    <iconify-icon icon="solar:add-circle-linear" className="text-sm" />
+                    Ajouter ici
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {items.map((d) => (
+                    <DishRow key={d.id} d={d} catName={catName} onEdit={() => setEditing({ ...d })} onRemove={() => remove(d)} />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+          {uncategorized.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between gap-3 mb-2 pb-2 border-b border-white/[0.07]">
+                <h3 className="font-serif text-base text-cream-50/60 flex items-center gap-2">
+                  <iconify-icon icon="solar:question-circle-linear" className="text-base" />
+                  Sans catégorie
+                  <span className="text-xs text-cream-50/40 font-sans font-normal">({uncategorized.length})</span>
+                </h3>
               </div>
-              <p className="text-xs text-cream-50/40">
-                {catName(d.categoryId)} · {formatPrice(d.price)} {d.tag ? `· ${d.tag}` : ''}
-              </p>
-            </div>
-            <div className="flex gap-2 flex-shrink-0">
-              <Btn variant="ghost" onClick={() => setEditing({ ...d })}>Modifier</Btn>
-              <Btn variant="danger" onClick={() => remove(d)}>Suppr.</Btn>
-            </div>
-          </Card>
-        ))}
-        {filtered.length === 0 && (
-          <p className="text-center text-cream-50/40 py-12">
-            {dishes.length === 0
-              ? 'Aucun plat. Cliquez sur « Ajouter un plat ».'
-              : 'Aucun plat ne correspond à votre recherche.'}
-          </p>
-        )}
-      </div>
+              <div className="space-y-2">
+                {uncategorized.map((d) => (
+                  <DishRow key={d.id} d={d} catName={catName} onEdit={() => setEditing({ ...d })} onRemove={() => remove(d)} />
+                ))}
+              </div>
+            </section>
+          )}
+          {dishes.length === 0 && (
+            <p className="text-center text-cream-50/40 py-12">
+              Aucun plat. Cliquez sur « Ajouter un plat ».
+            </p>
+          )}
+        </div>
+      ) : (
+        /* Vue liste filtrée (recherche ou filtre actif) */
+        <div className="space-y-2">
+          {filtered.map((d) => (
+            <DishRow key={d.id} d={d} catName={catName} onEdit={() => setEditing({ ...d })} onRemove={() => remove(d)} />
+          ))}
+          {filtered.length === 0 && (
+            <p className="text-center text-cream-50/40 py-12">
+              {dishes.length === 0
+                ? 'Aucun plat. Cliquez sur « Ajouter un plat ».'
+                : 'Aucun plat ne correspond à votre recherche.'}
+            </p>
+          )}
+        </div>
+      )}
     </div>
+  );
+}
+
+// Ligne plat (commune aux vues groupée et filtrée) — image, nom, prix, actions.
+function DishRow({ d, catName, onEdit, onRemove }) {
+  return (
+    <Card className="flex items-center gap-4">
+      <img
+        src={d.img}
+        alt=""
+        onLoad={(e) => e.currentTarget.classList.add('loaded')}
+        onError={(e) => { e.currentTarget.style.opacity = '0'; }}
+        className="w-14 h-14 rounded-lg object-cover bg-th-950 flex-shrink-0"
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className="font-medium text-cream-50 truncate">{d.name}</h3>
+          {d.available === false && (
+            <span className="text-[10px] uppercase tracking-wide bg-white/10 text-cream-50/50 px-2 py-0.5 rounded-full">masqué</span>
+          )}
+        </div>
+        <p className="text-xs text-cream-50/40">
+          {catName(d.categoryId)} · {formatPrice(d.price)} {d.tag ? `· ${d.tag}` : ''}
+        </p>
+      </div>
+      <div className="flex gap-2 flex-shrink-0">
+        <Btn variant="ghost" onClick={onEdit}>Modifier</Btn>
+        <Btn variant="danger" onClick={onRemove}>Suppr.</Btn>
+      </div>
+    </Card>
   );
 }

@@ -1,8 +1,9 @@
 // ============================================================================
-//  SEED — importe le menu actuel (data/menu.json) dans Firestore.
+//  SEED — importe le menu (data/menu.json) dans Firestore, en UN SEUL document
+//  `config/menu` (optimisation forfait Spark : 1 lecture = tout le menu).
 // ----------------------------------------------------------------------------
 //  À lancer UNE fois, après avoir configuré Firebase (.env.local) et activé
-//  Firestore. Charge les collections `categories`, `dishes`, `promos`.
+//  Firestore. Charge dishes + categories + promos dans le document unique.
 //
 //  Utilisation (depuis le dossier thaifood/) :
 //    node --env-file=.env.local scripts/seed-firebase.mjs
@@ -46,24 +47,21 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-async function seedCollection(name, items) {
-  if (!items || items.length === 0) {
-    console.log(`${name}: rien à importer`);
-    return;
-  }
-  const batch = db.batch();
-  for (const item of items) {
-    batch.set(db.collection(name).doc(item.id), item);
-  }
-  await batch.commit();
-  console.log(`${name}: ${items.length} importé(s) ✅`);
-}
-
 try {
-  await seedCollection('categories', menu.categories || []);
-  await seedCollection('dishes', menu.dishes || []);
-  await seedCollection('promos', menu.promos || []);
-  console.log('\n🎉 Seed terminé. Le menu est dans Firestore.');
+  await db.collection('config').doc('menu').set(
+    {
+      dishes: menu.dishes || [],
+      categories: menu.categories || [],
+      promos: menu.promos || [],
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+  console.log(
+    `menu : ${(menu.dishes || []).length} plat(s), ${(menu.categories || []).length} catégorie(s)` +
+      ` importés ✅ → document unique config/menu`
+  );
+  console.log('\n🎉 Seed terminé.');
   process.exit(0);
 } catch (e) {
   console.error('\n❌ Erreur seed :', e.message);

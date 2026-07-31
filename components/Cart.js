@@ -267,24 +267,26 @@ function CartLine({ item, onInc, onDec, onRemove }) {
 }
 
 export function QtyStepper({ value, onInc, onDec, size = 'sm' }) {
-  const dim = size === 'lg' ? 'w-9 h-9' : 'w-7 h-7';
-  const icon = size === 'lg' ? 'text-base' : 'text-sm';
+  const dim = size === 'lg' ? 'w-9 h-9' : 'w-8 h-8';
+  const glyph = size === 'lg' ? 'text-xl' : 'text-lg';
   return (
     <div className="flex items-center gap-2.5">
+      {/* Bouton « − » : contour doré pleinement opaque (clairement visible). */}
       <button
         onClick={onDec}
-        className={`${dim} rounded-full border border-gold-400/40 text-gold-400 hover:bg-gold-400/10 hover:border-gold-400 transition-all flex items-center justify-center`}
-        aria-label="Diminuer"
+        className={`${dim} rounded-full border border-gold-400 bg-gold-400/10 text-gold-200 hover:bg-gold-400/20 active:scale-95 transition-all flex items-center justify-center`}
+        aria-label="Diminuer la quantité"
       >
-        <iconify-icon icon="solar:minus-linear" className={icon} />
+        <span className={`font-bold leading-none ${glyph}`}>−</span>
       </button>
       <span className={`text-sm text-cream-50 w-5 text-center font-medium`}>{value}</span>
+      {/* Bouton « + » : rempli doré, texte sombre (contraste maximal). */}
       <button
         onClick={onInc}
-        className={`${dim} rounded-full border border-gold-400/40 text-gold-400 hover:bg-gold-400/10 hover:border-gold-400 transition-all flex items-center justify-center`}
-        aria-label="Augmenter"
+        className={`${dim} rounded-full border border-gold-400 bg-gold-400 text-th-950 hover:bg-gold-300 active:scale-95 transition-all flex items-center justify-center`}
+        aria-label="Augmenter la quantité"
       >
-        <iconify-icon icon="solar:add-linear" className={icon} />
+        <span className={`font-bold leading-none ${glyph}`}>+</span>
       </button>
     </div>
   );

@@ -1,12 +1,19 @@
 'use client';
 
 import useReveal from './useReveal';
+import useSite from './useSite';
 
 export default function Hero() {
   const ref = useReveal();
+  const site = useSite();
+  const heroImage = site.content?.heroImage;
 
   return (
-    <section ref={ref} className="relative min-h-screen flex items-end hero-bg">
+    <section
+      ref={ref}
+      className="relative min-h-screen flex items-end hero-bg"
+      style={heroImage ? { backgroundImage: `url(${heroImage})` } : undefined}
+    >
       <div className="hero-overlay absolute inset-0" />
       <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pb-20 sm:pb-28 pt-32 w-full">
         <div className="max-w-2xl">

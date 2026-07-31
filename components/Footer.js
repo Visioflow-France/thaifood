@@ -1,32 +1,38 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import useSite from './useSite';
+import { getSlots, daySummary } from '../lib/hours';
 
-const SCHEDULE = [
-  { day: 'Lundi', hours: 'Fermé', closed: true },
-  { day: 'Mar – Ven', hours: '11h30 – 14h00' },
-  { day: '', hours: '18h30 – 22h00' },
-  { day: 'Samedi', hours: '18h30 – 22h30' },
-  { day: 'Dimanche', hours: '12h00 – 22h00' },
+// Jours affichés dans l'ordre Lun → Dim (getDay : 1..6, 0).
+const DAY_ROWS = [
+  { day: 1, label: 'Lundi' },
+  { day: 2, label: 'Mardi' },
+  { day: 3, label: 'Mercredi' },
+  { day: 4, label: 'Jeudi' },
+  { day: 5, label: 'Vendredi' },
+  { day: 6, label: 'Samedi' },
+  { day: 0, label: 'Dimanche' },
 ];
 
-const SOCIALS = [
-  { icon: 'mdi:instagram', label: 'Instagram' },
-  { icon: 'mdi:pinterest', label: 'Pinterest' },
-  { icon: 'mdi:facebook', label: 'Facebook' },
+const SOCIAL_DEFS = [
+  { key: 'instagram', icon: 'mdi:instagram', label: 'Instagram' },
+  { key: 'facebook', icon: 'mdi:facebook', label: 'Facebook' },
+  { key: 'tiktok', icon: 'mdi:tiktok', label: 'TikTok' },
+  { key: 'tripadvisor', icon: 'mdi:tripadvisor', label: 'TripAdvisor' },
 ];
 
 export default function Footer() {
-  const [phone, setPhone] = useState('');
-
-  useEffect(() => {
-    fetch('/api/site', { cache: 'no-store' })
-      .then((r) => r.json())
-      .then((j) => setPhone(j.phone || ''))
-      .catch(() => {});
-  }, []);
+  const site = useSite();
+  const phone = site.phone || '';
+  const hours = site.hours || {};
+  const socials = site.socials || {};
+  const email = site.legalFields?.email || 'contact@thaifood77.fr';
+  const addr = site.legalFields
+    ? [site.legalFields.streetAddress, [site.legalFields.postalCode, site.legalFields.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+    : '12 Avenue de la République, 77340 Pontault-Combault';
 
   const tel = phone.replace(/[^\d+]/g, '');
+  const activeSocials = SOCIAL_DEFS.filter((s) => socials[s.key]);
 
   return (
     <footer className="bg-th-950 border-t border-white/[0.06] pt-16 pb-8">
@@ -42,16 +48,22 @@ export default function Footer() {
               vous transportent.
             </p>
             <div className="flex gap-3">
-              {SOCIALS.map((s) => (
-                <a
-                  key={s.label}
-                  href="#"
-                  aria-label={s.label}
-                  className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-cream-50/40 hover:border-gold-400/40 hover:text-gold-400 transition-all"
-                >
-                  <iconify-icon icon={s.icon} className="text-lg" />
-                </a>
-              ))}
+              {activeSocials.length > 0 ? (
+                activeSocials.map((s) => (
+                  <a
+                    key={s.key}
+                    href={socials[s.key]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-cream-50/40 hover:border-gold-400/40 hover:text-gold-400 transition-all"
+                  >
+                    <iconify-icon icon={s.icon} className="text-lg" />
+                  </a>
+                ))
+              ) : (
+                <span className="text-xs text-cream-50/25">Réseaux sociaux à venir.</span>
+              )}
             </div>
           </div>
 
@@ -60,12 +72,15 @@ export default function Footer() {
               Horaires
             </h4>
             <div className="space-y-3 text-sm text-cream-50/40 font-light">
-              {SCHEDULE.map((row, i) => (
-                <div key={i} className="flex justify-between max-w-[220px]">
-                  <span>{row.day}</span>
-                  <span className={row.closed ? 'text-cream-50/20' : ''}>{row.hours}</span>
-                </div>
-              ))}
+              {DAY_ROWS.map((row) => {
+                const summary = daySummary(getSlots(hours, row.day));
+                return (
+                  <div key={row.day} className="flex justify-between gap-3 max-w-[240px]">
+                    <span>{row.label}</span>
+                    <span className={summary ? '' : 'text-cream-50/20'}>{summary || 'Fermé'}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -76,7 +91,7 @@ export default function Footer() {
             <div className="space-y-3 text-sm text-cream-50/40 font-light">
               <div className="flex items-center gap-2">
                 <iconify-icon icon="solar:map-point-linear" className="text-gold-400" />
-                <span>12 Avenue de la République, 77340 Pontault-Combault</span>
+                <span>{addr || 'Adresse à renseigner'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <iconify-icon icon="solar:phone-linear" className="text-gold-400" />
@@ -90,8 +105,8 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2">
                 <iconify-icon icon="solar:letter-linear" className="text-gold-400" />
-                <a href="mailto:contact@thaifood77.fr" className="hover:text-gold-400 transition-colors">
-                  contact@thaifood77.fr
+                <a href={`mailto:${email}`} className="hover:text-gold-400 transition-colors">
+                  {email}
                 </a>
               </div>
             </div>

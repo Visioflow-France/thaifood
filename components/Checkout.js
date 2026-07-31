@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useCart } from './CartContext';
+import useSite from './useSite';
+import { isOpenNow, formatNextOpening } from '../lib/hours';
 import {
   computeTotals,
   formatPrice,
@@ -30,23 +32,16 @@ const EMPTY = {
 
 export default function Checkout() {
   const { items, placeOrder } = useCart();
+  const site = useSite();
+  const closed = !isOpenNow(site.hours);
+  const reopenText = formatNextOpening(site.hours);
 
   const [type, setType] = useState('pickup'); // 'pickup' | 'delivery'
-  const [schedule, setSchedule] = useState('asap'); // 'asap' | 'later'
-  const [when, setWhen] = useState('');
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [minWhen, setMinWhen] = useState('');
   const [onlinePayment, setOnlinePayment] = useState(false);
-
-  // `min` du champ datetime-local = maintenant (côté navigateur seulement).
-  useEffect(() => {
-    const d = new Date();
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    setMinWhen(d.toISOString().slice(0, 16));
-  }, []);
 
   // Paiement en ligne actif ? (sinon : règlement sur place / à la livraison)
   useEffect(() => {
@@ -81,13 +76,16 @@ export default function Checkout() {
       if (!/^\d{5}$/.test(form.postalCode.trim())) e.postalCode = '5 chiffres';
       if (!form.city.trim()) e.city = 'Requis';
     }
-    if (schedule === 'later' && !when) e.when = 'Indiquez l’heure souhaitée';
     return e;
   }
 
   async function onSubmit(ev) {
     ev.preventDefault();
     setServerError('');
+    if (closed) {
+      setServerError(`Le restaurant est actuellement fermé. Réouverture ${reopenText}.`);
+      return;
+    }
     const e = validate();
     setErrors(e);
     if (Object.keys(e).length > 0) return;
@@ -95,7 +93,7 @@ export default function Checkout() {
     setSubmitting(true);
     const res = await placeOrder({
       type,
-      scheduledFor: schedule === 'later' ? when : null,
+      scheduledFor: null,
       customer: form,
     });
     setSubmitting(false);
@@ -123,34 +121,6 @@ export default function Checkout() {
               hint={`${formatPrice(DELIVERY_FEE)} · offert dès ${formatPrice(FREE_DELIVERY_THRESHOLD)}`}
             />
           </div>
-        </Section>
-
-        {/* Créneau */}
-        <Section title="Quand ?" icon="solar:clock-circle-linear">
-          <div className="flex gap-2 mb-3">
-            <Chip active={schedule === 'asap'} onClick={() => setSchedule('asap')}>
-              Dès que possible
-            </Chip>
-            <Chip active={schedule === 'later'} onClick={() => setSchedule('later')}>
-              Programmer
-            </Chip>
-          </div>
-          {schedule === 'later' && (
-            <input
-              type="datetime-local"
-              value={when}
-              min={minWhen}
-              onChange={(e) => {
-                setWhen(e.target.value);
-                if (errors.when) setErrors((er) => ({ ...er, when: undefined }));
-              }}
-              className={`form-input w-full px-3.5 py-2.5 rounded-lg text-sm ${
-                errors.when ? 'border-red-400/60' : ''
-              }`}
-              style={{ colorScheme: 'dark' }}
-            />
-          )}
-          {errors.when && <p className="text-[11px] text-red-400/90 mt-1">{errors.when}</p>}
         </Section>
 
         {/* Coordonnées */}
@@ -274,9 +244,19 @@ export default function Checkout() {
           </div>
         )}
 
+        {closed && (
+          <div className="mb-3 flex items-start gap-2 text-[12px] text-red-200 bg-red-500/10 border border-red-400/25 rounded-lg px-3 py-2">
+            <iconify-icon icon="solar:lock-keyhole-minimalistic-linear" className="text-base mt-0.5 text-red-300" />
+            <span>
+              Le restaurant est actuellement fermé. La commande en ligne revient{' '}
+              <strong className="font-medium">{reopenText}</strong>.
+            </span>
+          </div>
+        )}
+
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || closed}
           className="cta-primary w-full py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {submitting ? (
@@ -346,22 +326,6 @@ function TypeCard({ active, onClick, icon, title, hint }) {
         {title}
       </div>
       <div className="text-[11px] text-cream-50/45 mt-0.5 leading-snug">{hint}</div>
-    </button>
-  );
-}
-
-function Chip({ active, onClick, children }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-4 py-2 rounded-full text-xs font-medium border transition-all ${
-        active
-          ? 'bg-gold-400 text-th-950 border-gold-400'
-          : 'bg-white/[0.03] text-cream-50/60 border-white/[0.08] hover:text-cream-50'
-      }`}
-    >
-      {children}
     </button>
   );
 }

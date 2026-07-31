@@ -1,0 +1,27 @@
+rules_version = '2';
+
+// ============================================================================
+//  RÈGLES FIREBASE STORAGE.
+// ----------------------------------------------------------------------------
+//  Les images des plats sont uploadées par le SERVEUR (SDK Admin, route
+//  /api/admin/upload) puis lues publiquement par le site. Aucune écriture
+//  côté client (compression WebP faite dans le navigateur, envoi au serveur).
+//
+//  → Lecture publique des images sous menu/, écriture refusée côté client.
+//
+//  À déployer :  firebase deploy --only storage
+// ============================================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Photos de plats : lecture publique (affichage site), pas d'écriture client.
+    match /menu/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    // Tout le reste : verrouillé.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

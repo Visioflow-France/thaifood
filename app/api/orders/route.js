@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { buildOrder, saveOrder, OrderError, isStripeActive } from '../../../lib/orders';
 import { getStripe, getRequestOrigin } from '../../../lib/stripe';
 import { getSettings, getCommissionPercent } from '../../../lib/settings';
+import { getSiteInfo } from '../../../lib/site';
+import { isOpenNow, formatNextOpening } from '../../../lib/hours';
 
 export const runtime = 'nodejs';
 // Toujours dynamique : on écrit dans un fichier, jamais de cache.
@@ -11,6 +13,18 @@ export async function POST(req) {
   try {
     const payload = await req.json().catch(() => ({}));
     const order = buildOrder(payload);
+
+    // ------------------------------------------------------------------
+    //  HORAIRES : on refuse la commande si le restaurant est fermé.
+    //  (Le contrôle côté client est une aide visuelle ; ici c'est la vraie
+    //  barrière, impossible à contourner depuis le navigateur.)
+    // ------------------------------------------------------------------
+    const { hours } = await getSiteInfo();
+    if (!isOpenNow(hours)) {
+      throw new OrderError(
+        `Le restaurant est actuellement fermé. Réouverture ${formatNextOpening(hours)}.`
+      );
+    }
 
     // ----------------------------------------------------------------------
     //  PAIEMENT EN LIGNE (Stripe Connect Express).

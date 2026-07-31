@@ -6,11 +6,12 @@ import CategoryManager from './CategoryManager';
 import PromoManager from './PromoManager';
 import StripeManager from './StripeManager';
 import SiteManager from './SiteManager';
+import OrdersManager from './OrdersManager';
 import { Btn, Input } from './ui';
 
 export default function AdminApp() {
   const [authed, setAuthed] = useState(null); // null = vérification en cours
-  const [tab, setTab] = useState('dishes');
+  const [tab, setTab] = useState('orders');
   const [data, setData] = useState({ dishes: [], categories: [], promos: [] });
   const [loadingData, setLoadingData] = useState(false);
 
@@ -64,6 +65,7 @@ export default function AdminApp() {
   }
 
   const tabs = [
+    { id: 'orders', label: 'Commandes', icon: 'solar:clipboard-list-linear' },
     { id: 'dishes', label: 'Plats', icon: 'solar:plate-linear' },
     { id: 'categories', label: 'Catégories', icon: 'solar:widget-linear' },
     { id: 'promos', label: 'Promotions', icon: 'solar:tag-price-linear' },
@@ -108,10 +110,11 @@ export default function AdminApp() {
         ))}
       </div>
 
-      {loadingData && (
+      {loadingData && tab !== 'orders' && (
         <p className="text-cream-50/40 text-sm mb-4">Chargement…</p>
       )}
 
+      {tab === 'orders' && <OrdersManager />}
       {tab === 'dishes' && (
         <DishManager dishes={data.dishes} categories={data.categories} reload={reload} />
       )}

@@ -5,13 +5,17 @@ import Img from './Img';
 import useReveal from './useReveal';
 import { useCart } from './CartContext';
 import useMenu from './useMenu';
+import useSite from './useSite';
 import { applyPromo, getApplicablePromo, formatPrice, promoLabel } from '../lib/pricing';
 import { sectionsInUse, sectionOf } from '../lib/sections';
+import { isOpenNow, formatNextOpening } from '../lib/hours';
 import DishModal from './DishModal';
 
 export default function Commander() {
   const { addToCart } = useCart();
   const { categories, dishes, promos, loading } = useMenu();
+  const site = useSite();
+  const open = isOpenNow(site.hours);
   const [activeSection, setActiveSection] = useState(null);
   const [activeCat, setActiveCat] = useState('all');
   const [selected, setSelected] = useState(null);
@@ -61,6 +65,20 @@ export default function Commander() {
           <p className="reveal reveal-delay-2 mt-4 text-cream-50/40 font-light max-w-lg mx-auto">
             Nos plats les plus acclamés, préparés à la commande et prêts à être dégustés.
           </p>
+          <div className="reveal reveal-delay-2 mt-5 flex justify-center">
+            <span
+              className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium border ${
+                open
+                  ? 'bg-green-500/10 border-green-400/30 text-green-300'
+                  : 'bg-red-500/10 border-red-400/30 text-red-300'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${open ? 'bg-green-400' : 'bg-red-400'} ${open ? '' : 'animate-pulse'}`} />
+              {open
+                ? 'Ouvert maintenant — commande en ligne activée'
+                : `Fermé — réouverture ${formatNextOpening(site.hours)}`}
+            </span>
+          </div>
         </div>
 
         {/* Niveau 1 : onglets par cuisine */}
