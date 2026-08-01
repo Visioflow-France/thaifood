@@ -18,10 +18,10 @@ const FALLBACK = {
   chefRole: "20 ans d'expérience · Cuisine du Nord",
   sinceYear: '2008',
   images: [
-    'https://images.unsplash.com/photo-1542838686-37da4a9fd1b6?w=600&q=80',
-    'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80',
-    'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=500&q=80',
-    'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=500&q=80',
+    'https://images.unsplash.com/photo-1556816426-5fc92e9ae0f4?w=600&q=80', // piments thaï frais
+    'https://images.unsplash.com/photo-1464500650248-1a4b45debb9f?w=800&q=80', // cuisson au wok
+    'https://images.unsplash.com/photo-1777828830363-b46f8a2c5aa5?w=500&q=80', // marché flottant (ambiance)
+    'https://images.unsplash.com/photo-1781095386508-c71b0f962893?w=500&q=80', // pad thaï dressé
   ],
 };
 
@@ -80,7 +80,7 @@ export default function Histoire() {
               <div className="col-span-7 row-span-3 img-frame rounded-2xl reveal reveal-delay-2">
                 <Img
                   src={images[1] || FALLBACK.images[1]}
-                  alt="Wok en flammes"
+                  alt="Cuisson au wok"
                   className="w-full h-full object-cover rounded-2xl"
                 />
               </div>
