@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { buildOrder, saveOrder, OrderError, isStripeActive } from '../../../lib/orders';
+import { buildOrder, saveOrder, OrderError, isStripeActive, nextDailySequence } from '../../../lib/orders';
 import { getStripe, getRequestOrigin } from '../../../lib/stripe';
 import { getSettings, getCommissionPercent } from '../../../lib/settings';
 import { getSiteInfo } from '../../../lib/site';
@@ -36,6 +36,13 @@ export async function POST(req) {
       );
     }
 
+    // Numéro de commande séquentiel du jour (1, 2, 3…) — se réinitialise
+    // chaque jour. Assigné APRÈS le contrôle d'horaires pour ne pas gaspiller
+    // un numéro sur une commande refusée (restaurant fermé).
+    const { day, seq } = await nextDailySequence();
+    order.day = day;
+    order.dailySeq = seq;
+
     // ----------------------------------------------------------------------
     //  PAIEMENT EN LIGNE (Stripe Connect Express).
     //  Si Stripe est configuré + un compte restaurateur est connecté :
@@ -68,7 +75,7 @@ export async function POST(req) {
                 currency: 'eur',
                 unit_amount: amount,
                 product_data: {
-                  name: `Commande ${order.ref}`,
+                  name: `Commande n°${order.dailySeq}`,
                   description: order.items.map((i) => `${i.qty}× ${i.name}`).join(' · ').slice(0, 200),
                 },
               },

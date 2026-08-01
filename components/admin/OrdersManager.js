@@ -46,6 +46,13 @@ const STATUS_OPTIONS = [
   'confirmed', 'preparing', 'ready', 'fulfilled', 'cancelled',
 ];
 
+// Libellé lisible d'une commande : numéro du jour (« Commande n°3 ») si
+// disponible, sinon repli sur la référence TF-XXXXXX (anciennes commandes).
+function orderLabel(o) {
+  if (o && Number.isFinite(o.dailySeq)) return `Commande n°${o.dailySeq}`;
+  return (o && o.ref) || 'Commande';
+}
+
 // --- Outils -----------------------------------------------------------------
 
 function formatDateTime(iso) {
@@ -105,7 +112,8 @@ function buildTicket(order, site) {
   lines.push(center('TICKET DE COMMANDE'));
   lines.push(center(order.type === 'delivery' ? '>>>> LIVRAISON <<<<' : '>> RETrait SUR PLACE <<'));
   lines.push('='.repeat(W));
-  lines.push(`Cmd ${order.ref}   ${formatDateTime(order.createdAt)}`);
+  lines.push(`${orderLabel(order)}   ${formatDateTime(order.createdAt)}`);
+  if (order.ref && Number.isFinite(order.dailySeq)) lines.push(`Réf : ${order.ref}`);
   lines.push(`Mode : ${order.type === 'delivery' ? 'LIVRAISON' : 'RETRAIT SUR PLACE'}`);
   if (order.scheduledFor) lines.push(`Pour : ${formatDateTime(order.scheduledFor)}`);
   lines.push(DASH);
@@ -209,6 +217,7 @@ function markPrintedServer(ref) {
 function sampleOrder() {
   return {
     ref: 'TF-TEST0',
+    dailySeq: 1,
     createdAt: new Date().toISOString(),
     type: 'delivery',
     status: 'paid',
@@ -318,7 +327,7 @@ export default function OrdersManager() {
     });
     persist();
     beep();
-    setToast(`Nouvelle commande : ${batch.map((o) => o.ref).join(', ')}`);
+    setToast(`Nouvelle commande : ${batch.map(orderLabel).join(', ')}`);
     setTimeout(() => setToast(''), 8000);
   }, []);
 
@@ -610,10 +619,13 @@ function OrderCard({ order, onStatusChange, onReprint }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-serif text-base text-cream-50">{order.ref}</h3>
+            <h3 className="font-serif text-base text-cream-50">{orderLabel(order)}</h3>
             <span className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full border ${st.cls}`}>
               {st.label}
             </span>
+            {Number.isFinite(order.dailySeq) && order.ref && (
+              <span className="text-[10px] text-cream-50/35 font-mono">{order.ref}</span>
+            )}
             <span
               className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${
                 order.type === 'delivery'
