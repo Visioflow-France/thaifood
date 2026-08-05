@@ -5,14 +5,6 @@ import { api } from './api';
 import { formatPrice } from '../../lib/pricing';
 import { Btn, Card, Field, ImagePicker, Input, Select, TextArea, Toggle } from './ui';
 
-const TAG_COLORS = [
-  { value: 'text-gold-400', label: 'Or' },
-  { value: 'text-green-300', label: 'Vert' },
-  { value: 'text-yellow-300', label: 'Jaune' },
-  { value: 'text-red-300', label: 'Rouge' },
-  { value: 'text-cream-50', label: 'Crème' },
-];
-
 function blankDish(categoryId) {
   return {
     name: '',
@@ -101,14 +93,6 @@ export default function DishManager({ dishes, categories, reload }) {
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </Select>
-          </Field>
-          <Field label="Badge (tag)" hint="Affiché en haut à gauche de la photo.">
-            <div className="flex gap-2">
-              <Input value={editing.tag} onChange={(e) => setEditing({ ...editing, tag: e.target.value })} placeholder="ex : Best-seller" />
-              <Select value={editing.tagClass} onChange={(e) => setEditing({ ...editing, tagClass: e.target.value })} className="w-32">
-                {TAG_COLORS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </Select>
-            </div>
           </Field>
           <Field label="Ordre d'affichage" hint="Plus petit = apparaît en premier.">
             <Input type="number" value={editing.order} onChange={(e) => setEditing({ ...editing, order: e.target.value })} placeholder="auto" />
@@ -283,7 +267,7 @@ function DishRow({ d, catName, onEdit, onRemove }) {
           )}
         </div>
         <p className="text-xs text-cream-50/40">
-          {catName(d.categoryId)} · {formatPrice(d.price)} {d.tag ? `· ${d.tag}` : ''}
+          {catName(d.categoryId)} · {formatPrice(d.price)}
         </p>
       </div>
       <div className="flex gap-2 flex-shrink-0">

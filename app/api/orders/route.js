@@ -36,25 +36,25 @@ export async function POST(req) {
       );
     }
 
-    // Numéro de commande séquentiel du jour (1, 2, 3…) — se réinitialise
-    // chaque jour. Assigné APRÈS le contrôle d'horaires pour ne pas gaspiller
-    // un numéro sur une commande refusée (restaurant fermé).
-    const { day, seq } = await nextDailySequence();
-    order.day = day;
-    order.dailySeq = seq;
+    // Le numéro de commande séquentiel (1, 2, 3…) se réinitialise chaque jour.
+    //  - RETRAIT (paiement sur place) : assigné à la création, plus bas.
+    //  - LIVRAISON (paiement en ligne Stripe) : assigné au SUCCÈS du paiement
+    //    (dans markOrderPaid, lib/orders.js), pour ne pas gaspiller un numéro
+    //    sur une commande abandonnée ou échouée.
 
     // ----------------------------------------------------------------------
-    //  PAIEMENT EN LIGNE (Stripe Connect Express).
-    //  Si Stripe est configuré + un compte restaurateur est connecté :
-    //  on crée une Stripe Checkout Session (destination charge vers le compte
-    //  du restaurateur + commission plateforme). Le client est ensuite
-    //  redirigé vers la page Stripe, puis revient sur /commande?ref=…
-    //  Le webhook Stripe confirme le paiement (statut -> 'paid').
+    //  PAIEMENT EN LIGNE (Stripe Connect Express) — LIVRAISON uniquement.
+    //  Le RETRAIT se règle sur place (enregistré immédiatement en 'received').
+    //  Pour la livraison : si Stripe est configuré + un compte restaurateur est
+    //  connecté, on crée une Stripe Checkout Session (destination charge vers
+    //  le compte du restaurateur + commission plateforme). Le client revient
+    //  ensuite sur /commande?ref=… et le webhook Stripe confirme le paiement
+    //  (statut -> 'paid', + attribution du numéro quotidien).
     //
-    //  Sinon : comportement historique (commande enregistrée « reçue »,
-    //  réglée sur place / à la livraison).
+    //  Sinon (retrait, ou livraison sans Stripe) : commande enregistrée
+    //  « reçue », réglée sur place / à la livraison.
     // ----------------------------------------------------------------------
-    if (await isStripeActive()) {
+    if (order.type === 'delivery' && (await isStripeActive())) {
       const stripe = getStripe();
       const settings = await getSettings();
       const origin = getRequestOrigin(req);
@@ -75,7 +75,7 @@ export async function POST(req) {
                 currency: 'eur',
                 unit_amount: amount,
                 product_data: {
-                  name: `Commande n°${order.dailySeq}`,
+                  name: `Commande ${order.ref}`,
                   description: order.items.map((i) => `${i.qty}× ${i.name}`).join(' · ').slice(0, 200),
                 },
               },
@@ -108,7 +108,11 @@ export async function POST(req) {
       return NextResponse.json({ ok: true, order, checkoutUrl: session.url }, { status: 201 });
     }
 
-    // Mode « paiement sur place » (Stripe désactivé).
+    // Retrait (paiement sur place) ou livraison sans Stripe : enregistrement
+    // immédiat en 'received'. Numéro quotidien assigné ici (voir plus haut).
+    const { day, seq } = await nextDailySequence();
+    order.day = day;
+    order.dailySeq = seq;
     await saveOrder(order);
     return NextResponse.json({ ok: true, order }, { status: 201 });
   } catch (e) {

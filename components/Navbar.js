@@ -3,11 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useCart } from './CartContext';
 
-const LINKS = [
-  { href: '#histoire', label: 'Notre Histoire' },
-  { href: '#commander', label: 'Commander' },
-  { href: '#avis', label: 'Avis' },
-];
+// Liens affichés dans la barre de navigation (vide : plus de lien « Commander »).
+// Pour en rajouter plus tard : { href: '#commander', label: 'Commander' }.
+const LINKS = [];
 
 export default function Navbar() {
   const { count, openCart } = useCart();
@@ -70,16 +68,18 @@ export default function Navbar() {
               )}
             </button>
 
-            <button
-              onClick={() => setMenuOpen(true)}
-              className="md:hidden p-2"
-              aria-label="Menu"
-            >
-              <iconify-icon
-                icon="solar:hamburger-menu-linear"
-                className="text-xl text-cream-50/70"
-              />
-            </button>
+            {LINKS.length > 0 && (
+              <button
+                onClick={() => setMenuOpen(true)}
+                className="md:hidden p-2"
+                aria-label="Menu"
+              >
+                <iconify-icon
+                  icon="solar:hamburger-menu-linear"
+                  className="text-xl text-cream-50/70"
+                />
+              </button>
+            )}
           </div>
         </div>
       </nav>

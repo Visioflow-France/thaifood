@@ -26,10 +26,10 @@ export default function Footer() {
   const phone = site.phone || '';
   const hours = site.hours || {};
   const socials = site.socials || {};
-  const email = site.legalFields?.email || 'contact@thaifood77.fr';
+  const email = site.legalFields?.email || 'pad.77thai@gmail.com';
   const addr = site.legalFields
     ? [site.legalFields.streetAddress, [site.legalFields.postalCode, site.legalFields.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
-    : '12 Avenue de la République, 77340 Pontault-Combault';
+    : '142 Avenue Charles Rouxel, 77340 Pontault-Combault';
 
   const tel = phone.replace(/[^\d+]/g, '');
   const activeSocials = SOCIAL_DEFS.filter((s) => socials[s.key]);
@@ -117,9 +117,15 @@ export default function Footer() {
           <p className="text-xs text-cream-50/30">
             © {new Date().getFullYear()} Thaï Food 77. Tous droits réservés.
           </p>
-          <div className="flex items-center gap-5 text-xs text-cream-50/30">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 justify-center sm:justify-end text-xs text-cream-50/30">
             <a href="/mentions-legales" className="hover:text-gold-400 transition-colors">
               Mentions légales
+            </a>
+            <a href="/cgv" className="hover:text-gold-400 transition-colors">
+              CGV
+            </a>
+            <a href="/allergenes" className="hover:text-gold-400 transition-colors">
+              Allergènes
             </a>
             <span className="hidden sm:inline">Fait avec passion à Pontault-Combault.</span>
           </div>

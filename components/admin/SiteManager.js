@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Btn, Input, Card, Field, TextArea, ImagePicker } from './ui';
+import { Btn, Input, Card, Field, TextArea } from './ui';
 import { isOpenNow, formatNextOpening } from '../../lib/hours';
 
 // ============================================================================
@@ -38,7 +38,6 @@ export default function SiteManager() {
   const [fields, setFields] = useState({});
   const [hours, setHours] = useState({});
   const [socials, setSocials] = useState({});
-  const [content, setContent] = useState({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(''); // id du bloc en cours d'enregistrement
   const [saved, setSaved] = useState(''); // id du bloc venant d'être enregistré
@@ -53,7 +52,6 @@ export default function SiteManager() {
       setFields(j.legalFields || {});
       setHours(j.hours || {});
       setSocials(j.socials || {});
-      setContent(j.content || {});
     } catch {
       setErr('Chargement impossible.');
     } finally {
@@ -82,7 +80,6 @@ export default function SiteManager() {
       if (j.legalFields) setFields(j.legalFields);
       if (j.hours) setHours(j.hours);
       if (j.socials) setSocials(j.socials);
-      if (j.content) setContent(j.content);
       setSaved(id);
       setTimeout(() => setSaved(''), 1800);
     } catch (e) {
@@ -100,14 +97,6 @@ export default function SiteManager() {
       return { ...prev, [n]: cur };
     });
   const setSocial = (k, v) => setSocials((s) => ({ ...s, [k]: v }));
-  const setContentField = (k, v) => setContent((c) => ({ ...c, [k]: v }));
-  const setStoryImage = (i, v) =>
-    setContent((c) => {
-      const imgs = [...(c.histoireImages || ['', '', '', ''])];
-      while (imgs.length < 4) imgs.push('');
-      imgs[i] = v;
-      return { ...c, histoireImages: imgs };
-    });
 
   const openNow = isOpenNow(hours);
 
@@ -129,7 +118,6 @@ export default function SiteManager() {
       case 'legal': return { legal };
       case 'hours': return { hours };
       case 'socials': return { socials };
-      case 'content': return { content };
       default: return {};
     }
   }
@@ -149,7 +137,7 @@ export default function SiteManager() {
           <div className="flex-1">
             <h3 className="font-serif text-lg text-cream-50">Téléphone</h3>
             <p className="text-xs text-cream-50/45 mt-1 mb-3 leading-relaxed">
-              Affiché dans le bandeau « Commander par téléphone » et le pied de page.
+              Affiché dans le bandeau « Commander par téléphone », l&apos;en-tête (réservation) et le pied de page.
             </p>
             <div className="flex items-center gap-2 max-w-sm">
               <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01 64 37 55 00" />
@@ -256,61 +244,6 @@ export default function SiteManager() {
         </div>
       </Card>
 
-      {/* Page d'accueil (photos + chef) */}
-      <Card>
-        <div className="flex items-start gap-3">
-          <iconify-icon icon="solar:gallery-linear" className="text-2xl text-gold-400 mt-0.5" />
-          <div className="flex-1">
-            <h3 className="font-serif text-lg text-cream-50">Page d&apos;accueil (photos &amp; chef)</h3>
-            <p className="text-xs text-cream-50/45 mt-1 mb-4 leading-relaxed">
-              Remplacez les photos d&apos;illustration par vos vraies photos et indiquez le vrai nom du chef.
-              Un champ vide conserve la valeur par défaut.
-            </p>
-
-            <Field label="Image principale (bannière d'accueil)">
-              <ImagePicker value={content.heroImage || ''} onChange={(v) => setContentField('heroImage', v)} />
-            </Field>
-
-            <div className="grid sm:grid-cols-2 gap-3 mt-4">
-              <Field label="Nom du chef">
-                <Input value={content.chefName || ''} onChange={(e) => setContentField('chefName', e.target.value)} placeholder="Chef Somchai" />
-              </Field>
-              <Field label="Rôle / spécialité">
-                <Input value={content.chefRole || ''} onChange={(e) => setContentField('chefRole', e.target.value)} placeholder="20 ans d'expérience" />
-              </Field>
-              <Field label="Depuis (année)">
-                <Input value={content.sinceYear || ''} onChange={(e) => setContentField('sinceYear', e.target.value)} placeholder="2008" />
-              </Field>
-            </div>
-
-            <div className="mt-4">
-              <Field label="Photo du chef">
-                <ImagePicker value={content.chefPhoto || ''} onChange={(v) => setContentField('chefPhoto', v)} />
-              </Field>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <Field label="Texte d'histoire (1)">
-                <TextArea rows={3} value={content.storyText1 || ''} onChange={(e) => setContentField('storyText1', e.target.value)} />
-              </Field>
-              <Field label="Texte d'histoire (2)">
-                <TextArea rows={3} value={content.storyText2 || ''} onChange={(e) => setContentField('storyText2', e.target.value)} />
-              </Field>
-            </div>
-
-            <div className="mt-4 grid sm:grid-cols-2 gap-3">
-              {[0, 1, 2, 3].map((i) => (
-                <Field key={i} label={`Photo « Histoire » ${i + 1}`}>
-                  <ImagePicker value={(content.histoireImages || [])[i] || ''} onChange={(v) => setStoryImage(i, v)} />
-                </Field>
-              ))}
-            </div>
-
-            <div className="mt-4">{saveBtn('content', 'Enregistrer la page d\'accueil')}</div>
-          </div>
-        </div>
-      </Card>
-
       {/* Informations légales structurées */}
       <Card>
         <div className="flex items-start gap-3">
@@ -342,7 +275,7 @@ export default function SiteManager() {
                 <Input value={fields.tvaIntracom || ''} onChange={(e) => setField('tvaIntracom', e.target.value)} placeholder="FR 12 345678901" />
               </Field>
               <Field label="Adresse" className="sm:col-span-2">
-                <Input value={fields.streetAddress || ''} onChange={(e) => setField('streetAddress', e.target.value)} placeholder="12 Avenue de la République" />
+                <Input value={fields.streetAddress || ''} onChange={(e) => setField('streetAddress', e.target.value)} placeholder="142 Avenue Charles Rouxel" />
               </Field>
               <Field label="Code postal">
                 <Input value={fields.postalCode || ''} onChange={(e) => setField('postalCode', e.target.value)} placeholder="77340" />
@@ -351,7 +284,7 @@ export default function SiteManager() {
                 <Input value={fields.city || ''} onChange={(e) => setField('city', e.target.value)} placeholder="Pontault-Combault" />
               </Field>
               <Field label="E-mail">
-                <Input type="email" value={fields.email || ''} onChange={(e) => setField('email', e.target.value)} placeholder="contact@thaifood77.fr" />
+                <Input type="email" value={fields.email || ''} onChange={(e) => setField('email', e.target.value)} placeholder="pad.77thai@gmail.com" />
               </Field>
               <Field label="Directeur / Directrice de publication">
                 <Input value={fields.publicationDirector || ''} onChange={(e) => setField('publicationDirector', e.target.value)} />

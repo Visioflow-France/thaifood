@@ -7,6 +7,8 @@ export default function Hero() {
   const ref = useReveal();
   const site = useSite();
   const heroImage = site.content?.heroImage;
+  const phone = site.phone || '';
+  const tel = phone.replace(/[^\d+]/g, '');
 
   return (
     <section
@@ -20,6 +22,22 @@ export default function Hero() {
           <div className="reveal section-label mb-6">
             Restaurant Thaïlandais — Pontault-Combault
           </div>
+          {phone ? (
+            <a
+              href={`tel:${tel}`}
+              className="reveal mb-6 inline-flex items-center gap-2 rounded-full border border-gold-400/30 bg-gold-400/10 px-4 py-1.5 text-sm text-cream-50/90 hover:bg-gold-400/20 transition"
+            >
+              <iconify-icon icon="solar:phone-linear" className="text-gold-400 text-base" />
+              <span className="text-cream-50/60">Réservation par téléphone</span>
+              <span className="h-3 w-px bg-cream-50/20" />
+              <span className="font-medium">{phone}</span>
+            </a>
+          ) : (
+            <span className="reveal mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-1.5 text-sm text-cream-50/45">
+              <iconify-icon icon="solar:phone-linear" className="text-cream-50/40 text-base" />
+              Réservation par téléphone
+            </span>
+          )}
           <h1 className="reveal reveal-delay-1 font-serif text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] leading-[1.02] tracking-tight text-cream-50 mb-3">
             Restaurant <span className="text-shimmer italic">Thaï</span> à Pontault-Combault
           </h1>
@@ -35,11 +53,11 @@ export default function Hero() {
           </p>
           <div className="reveal reveal-delay-3 flex flex-wrap gap-4">
             <a
-              href="#reserver"
+              href={phone ? `tel:${tel}` : '#commander'}
               className="cta-primary px-7 py-3.5 rounded-full text-sm font-medium inline-flex items-center gap-2"
             >
               Réserver une table
-              <iconify-icon icon="solar:arrow-right-linear" className="text-base" />
+              <iconify-icon icon={phone ? 'solar:phone-linear' : 'solar:arrow-right-linear'} className="text-base" />
             </a>
             <a
               href="#commander"
@@ -48,16 +66,6 @@ export default function Hero() {
               Commander en ligne
               <iconify-icon icon="solar:bag-3-linear" className="text-base" />
             </a>
-          </div>
-          <div className="reveal reveal-delay-4 mt-12 flex items-center gap-3">
-            <div className="flex gap-0.5">
-              <iconify-icon icon="solar:star-bold" className="text-gold-400 text-sm" />
-              <iconify-icon icon="solar:star-bold" className="text-gold-400 text-sm" />
-              <iconify-icon icon="solar:star-bold" className="text-gold-400 text-sm" />
-              <iconify-icon icon="solar:star-bold" className="text-gold-400 text-sm" />
-              <iconify-icon icon="solar:star-bold" className="text-gold-400/50 text-sm" />
-            </div>
-            <span className="text-xs text-cream-50/40">4,7 · 463 avis Google</span>
           </div>
         </div>
       </div>

@@ -85,6 +85,14 @@ export default function Commander() {
                 : `Fermé — réouverture ${formatNextOpening(site.hours)}`}
             </span>
           </div>
+          <p className="reveal reveal-delay-2 mt-4 text-xs text-cream-50/40">
+            <iconify-icon icon="solar:danger-circle-linear" className="mr-1 text-gold-400/70 align-middle" />
+            Allergies ou régime particulier ? Précisez-le à la commande.{' '}
+            <a href="/allergenes" className="underline hover:text-gold-400 transition-colors">
+              Informations allergènes
+            </a>
+            .
+          </p>
         </div>
 
         {/* Niveau 1 : onglets par cuisine */}
@@ -126,7 +134,7 @@ export default function Commander() {
         ) : visibleDishes.length === 0 ? (
           <p className="text-center text-cream-50/40 font-light">Aucun plat dans cette catégorie pour le moment.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             {visibleDishes.map((d, i) => (
               <DishCard
                 key={d.id}
@@ -196,7 +204,7 @@ function DishCard({ dish, promos, index, onOpen, onAdd }) {
   return (
     <article
       onClick={onOpen}
-      className={`dish-card reveal reveal-delay-${(index % 3) + 1} bg-white/[0.04] border border-white/[0.07] rounded-2xl overflow-hidden group flex flex-col cursor-pointer hover:border-gold-400/25`}
+      className={`dish-card reveal reveal-delay-${(index % 4) + 1} bg-white/[0.04] border border-white/[0.07] rounded-2xl overflow-hidden group flex flex-col cursor-pointer hover:border-gold-400/25`}
     >
       <div className="relative h-52 sm:h-56 overflow-hidden">
         <Img src={dish.img} alt={dish.name} className="w-full h-full object-cover" />

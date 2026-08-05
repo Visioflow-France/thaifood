@@ -486,7 +486,11 @@ export default function OrdersManager() {
     return Date.now() - t < 7 * 86400000; // '7d'
   }
 
-  const shown = orders.filter(inRange);
+  // Les livraisons non payées (awaiting_payment) ou en échec (failed) ne sont
+  // pas affichées : une livraison n'apparaît que lorsqu'elle est effectivement
+  // payée. Les documents restent en base (retour client sur la page /commande).
+  const HIDDEN_STATUSES = new Set(['awaiting_payment', 'failed']);
+  const shown = orders.filter((o) => inRange(o) && !HIDDEN_STATUSES.has(o.status));
   const newCount = orders.filter(
     (o) => AUTO_PRINT_STATUSES.includes(o.status) && !o.printedAt
   ).length;

@@ -58,6 +58,9 @@ export default function Checkout() {
   const totals = computeTotals(items, type);
   const count = items.reduce((s, i) => s + i.qty, 0);
   const freeDelivery = type === 'delivery' && totals.subtotal >= FREE_DELIVERY_THRESHOLD;
+  // Le paiement en ligne ne s'applique qu'à la livraison : le retrait se règle
+  // sur place, même quand Stripe est actif.
+  const willPayOnline = onlinePayment && type === 'delivery';
 
   function setField(name, value) {
     setForm((f) => ({ ...f, [name]: value }));
@@ -121,6 +124,16 @@ export default function Checkout() {
               hint={`${formatPrice(DELIVERY_FEE)} · offert dès ${formatPrice(FREE_DELIVERY_THRESHOLD)}`}
             />
           </div>
+
+          {type === 'pickup' && (
+            <div className="mt-3 flex items-start gap-2 text-[12px] text-cream-50/80 bg-gold-400/[0.06] border border-gold-400/25 rounded-lg px-3 py-2.5">
+              <iconify-icon icon="solar:wallet-money-linear" className="text-base mt-0.5 text-gold-400 shrink-0" />
+              <span>
+                Vous réglerez <strong className="font-medium text-gold-300">sur place</strong> au moment de
+                récupérer votre commande (espèces ou carte).
+              </span>
+            </div>
+          )}
         </Section>
 
         {/* Coordonnées */}
@@ -262,22 +275,24 @@ export default function Checkout() {
           {submitting ? (
             <>
               <iconify-icon icon="solar:spinner-round-linear" className="text-base animate-spin" />
-              {onlinePayment ? 'Redirection vers le paiement…' : 'Enregistrement…'}
+              {willPayOnline ? 'Redirection vers le paiement…' : 'Enregistrement…'}
             </>
           ) : (
             <>
               <iconify-icon
-                icon={onlinePayment ? 'solar:card-transfer-linear' : 'solar:check-circle-linear'}
+                icon={willPayOnline ? 'solar:card-transfer-linear' : 'solar:check-circle-linear'}
                 className="text-base"
               />
-              {onlinePayment ? 'Confirmer & payer' : 'Confirmer la commande'} · {formatPrice(totals.total)}
+              {willPayOnline ? 'Confirmer & payer' : 'Confirmer la commande'} · {formatPrice(totals.total)}
             </>
           )}
         </button>
         <p className="text-[11px] text-cream-50/30 text-center mt-3 leading-relaxed">
-          {onlinePayment
+          {willPayOnline
             ? 'Paiement sécurisé par Stripe · vous serez redirigé(e) pour régler.'
-            : 'Vous serez recontacté(e) pour confirmation. Règlement sur place ou à la livraison.'}
+            : type === 'pickup'
+              ? 'Règlement sur place lors du retrait. Vous serez recontacté(e) pour confirmation.'
+              : 'Paiement en ligne sur le site lors de la confirmation.'}
         </p>
       </div>
     </form>
