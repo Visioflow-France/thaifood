@@ -134,7 +134,7 @@ export default function Commander() {
         ) : visibleDishes.length === 0 ? (
           <p className="text-center text-cream-50/40 font-light">Aucun plat dans cette catégorie pour le moment.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {visibleDishes.map((d, i) => (
               <DishCard
                 key={d.id}
@@ -206,7 +206,7 @@ function DishCard({ dish, promos, index, onOpen, onAdd }) {
       onClick={onOpen}
       className={`dish-card reveal reveal-delay-${(index % 4) + 1} bg-white/[0.04] border border-white/[0.07] rounded-2xl overflow-hidden group flex flex-col cursor-pointer hover:border-gold-400/25`}
     >
-      <div className="relative h-52 sm:h-56 overflow-hidden">
+      <div className="relative h-40 sm:h-52 lg:h-56 overflow-hidden">
         <Img src={dish.img} alt={dish.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
         {hasPromo && (
@@ -232,9 +232,9 @@ function DishCard({ dish, promos, index, onOpen, onAdd }) {
           </span>
         </div>
       </div>
-      <div className="p-5 flex flex-col flex-1">
-        <h3 className="font-serif text-lg text-cream-50 leading-snug">{dish.name}</h3>
-        <p className="text-sm text-cream-50/40 font-light leading-relaxed mt-1.5 mb-4 line-clamp-2 flex-1">
+      <div className="p-3.5 sm:p-5 flex flex-col flex-1">
+        <h3 className="font-serif text-[15px] sm:text-lg text-cream-50 leading-snug">{dish.name}</h3>
+        <p className="text-xs sm:text-sm text-cream-50/40 font-light leading-relaxed mt-1.5 mb-3 sm:mb-4 line-clamp-2 flex-1">
           {dish.desc}
         </p>
         <button
