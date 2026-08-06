@@ -173,39 +173,54 @@ export default function SiteManager() {
                 const [s0, s1] = slotsOfDay(hours, row.n);
                 const closed = !s0.open && !s0.close && !s1.open && !s1.close;
                 return (
-                  <div key={row.n} className="flex flex-wrap items-center gap-2 py-1">
-                    <span className={`w-24 text-sm ${closed ? 'text-cream-50/40' : 'text-cream-50/80'}`}>{row.label}</span>
-                    <input
-                      type="time"
-                      value={s0.open}
-                      onChange={(e) => setSlot(row.n, 0, 'open', e.target.value)}
-                      className="form-input w-[88px] px-2 py-1.5 rounded-lg text-xs"
-                      style={{ colorScheme: 'dark' }}
-                    />
-                    <span className="text-cream-50/30 text-xs">–</span>
-                    <input
-                      type="time"
-                      value={s0.close}
-                      onChange={(e) => setSlot(row.n, 0, 'close', e.target.value)}
-                      className="form-input w-[88px] px-2 py-1.5 rounded-lg text-xs"
-                      style={{ colorScheme: 'dark' }}
-                    />
-                    <input
-                      type="time"
-                      value={s1.open}
-                      onChange={(e) => setSlot(row.n, 1, 'open', e.target.value)}
-                      className="form-input w-[88px] px-2 py-1.5 rounded-lg text-xs ml-2"
-                      style={{ colorScheme: 'dark' }}
-                    />
-                    <span className="text-cream-50/30 text-xs">–</span>
-                    <input
-                      type="time"
-                      value={s1.close}
-                      onChange={(e) => setSlot(row.n, 1, 'close', e.target.value)}
-                      className="form-input w-[88px] px-2 py-1.5 rounded-lg text-xs"
-                      style={{ colorScheme: 'dark' }}
-                    />
-                    {closed && <span className="text-[11px] text-cream-50/30">Fermé</span>}
+                  <div
+                    key={row.n}
+                    className="flex flex-col gap-2 border-b border-white/[0.05] py-2 last:border-0 sm:flex-row sm:items-center sm:gap-3"
+                  >
+                    <span className={`text-sm sm:w-20 ${closed ? 'text-cream-50/40' : 'text-cream-50/80'}`}>
+                      {row.label}
+                      {closed && <span className="ml-2 text-[11px] text-cream-50/30">Fermé</span>}
+                    </span>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                      {/* Créneau du midi */}
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="text-[10px] uppercase tracking-wide text-cream-50/35">Midi</span>
+                        <input
+                          type="time"
+                          value={s0.open}
+                          onChange={(e) => setSlot(row.n, 0, 'open', e.target.value)}
+                          className="form-input w-[72px] px-2 py-1.5 rounded-lg text-xs sm:w-[84px]"
+                          style={{ colorScheme: 'dark' }}
+                        />
+                        <span className="text-cream-50/30 text-xs">–</span>
+                        <input
+                          type="time"
+                          value={s0.close}
+                          onChange={(e) => setSlot(row.n, 0, 'close', e.target.value)}
+                          className="form-input w-[72px] px-2 py-1.5 rounded-lg text-xs sm:w-[84px]"
+                          style={{ colorScheme: 'dark' }}
+                        />
+                      </span>
+                      {/* Créneau du soir */}
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="text-[10px] uppercase tracking-wide text-cream-50/35">Soir</span>
+                        <input
+                          type="time"
+                          value={s1.open}
+                          onChange={(e) => setSlot(row.n, 1, 'open', e.target.value)}
+                          className="form-input w-[72px] px-2 py-1.5 rounded-lg text-xs sm:w-[84px]"
+                          style={{ colorScheme: 'dark' }}
+                        />
+                        <span className="text-cream-50/30 text-xs">–</span>
+                        <input
+                          type="time"
+                          value={s1.close}
+                          onChange={(e) => setSlot(row.n, 1, 'close', e.target.value)}
+                          className="form-input w-[72px] px-2 py-1.5 rounded-lg text-xs sm:w-[84px]"
+                          style={{ colorScheme: 'dark' }}
+                        />
+                      </span>
+                    </div>
                   </div>
                 );
               })}

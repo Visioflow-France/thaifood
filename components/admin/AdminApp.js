@@ -77,7 +77,7 @@ export default function AdminApp() {
     <Shell>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="font-serif text-2xl text-cream-50">Dashboard Thai Food 77</h1>
+          <h1 className="font-serif text-xl sm:text-2xl text-cream-50">Dashboard Thai Food 77</h1>
           <p className="text-sm text-cream-50/40">
             Vos modifications apparaissent en direct sur le site.
           </p>
@@ -93,18 +93,18 @@ export default function AdminApp() {
         </div>
       </div>
 
-      <div className="flex gap-2 mb-6 border-b border-white/[0.08]">
+      <div className="-mx-1 mb-6 flex gap-1 overflow-x-auto border-b border-white/[0.08] px-1 pb-px [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-2">
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+            className={`flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium -mb-px transition-colors sm:px-4 ${
               tab === t.id
                 ? 'border-gold-400 text-gold-400'
                 : 'border-transparent text-cream-50/50 hover:text-cream-50'
             }`}
           >
-            <iconify-icon icon={t.icon} />
+            <iconify-icon icon={t.icon} className="text-base shrink-0" />
             {t.label}
           </button>
         ))}

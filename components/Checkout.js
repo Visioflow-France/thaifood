@@ -55,9 +55,9 @@ export default function Checkout() {
     };
   }, []);
 
-  const totals = computeTotals(items, type);
+  const totals = computeTotals(items, type, { postalCode: form.postalCode, city: form.city });
   const count = items.reduce((s, i) => s + i.qty, 0);
-  const freeDelivery = type === 'delivery' && totals.subtotal >= FREE_DELIVERY_THRESHOLD;
+  const freeDelivery = type === 'delivery' && totals.deliveryFee === 0;
   // Le paiement en ligne ne s'applique qu'à la livraison : le retrait se règle
   // sur place, même quand Stripe est actif.
   const willPayOnline = onlinePayment && type === 'delivery';
@@ -121,7 +121,7 @@ export default function Checkout() {
               onClick={() => setType('delivery')}
               icon="solar:scooter-linear"
               title="Livraison"
-              hint={`${formatPrice(DELIVERY_FEE)} · offert dès ${formatPrice(FREE_DELIVERY_THRESHOLD)}`}
+              hint={`Gratuite à Pontault dès ${formatPrice(FREE_DELIVERY_THRESHOLD)} · ${formatPrice(DELIVERY_FEE)} ailleurs`}
             />
           </div>
 
