@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Thaï Food 77">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#171717"/>
+      <stop offset="1" stop-color="#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e7cf99"/>
+      <stop offset="0.5" stop-color="#c9a96e"/>
+      <stop offset="1" stop-color="#a17f2f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Tuile sombre arrondie -->
+  <rect x="2" y="2" width="96" height="96" rx="22" ry="22" fill="url(#bg)" stroke="#c9a96e" stroke-opacity="0.35" stroke-width="1.5"/>
+
+  <!-- Monogramme "T" + "77" : renvoie au logo Thaï Food 77 -->
+  <g font-family="'Playfair Display', Georgia, 'Times New Roman', serif" fill="url(#gold)" text-anchor="middle">
+    <text x="44" y="68" font-size="62" font-style="italic" font-weight="600">T</text>
+    <text x="74" y="40" font-size="26" font-weight="600">77</text>
+  </g>
+
+  <!-- Filet doré -->
+  <rect x="30" y="78" width="40" height="2" rx="1" fill="#c9a96e" fill-opacity="0.7"/>
+</svg>

@@ -165,39 +165,24 @@ function escapeHtml(s) {
 
 // Ouvre une iframe masquée, y écrit le ticket et lance l'impression.
 function printTicket(order, site) {
-  if (typeof window === 'undefined') return;
-  const iframe = document.createElement('iframe');
-  iframe.setAttribute('aria-hidden', 'true');
-  iframe.style.position = 'fixed';
-  iframe.style.right = '0';
-  iframe.style.bottom = '0';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
-  iframe.style.border = '0';
-  document.body.appendChild(iframe);
+  if (typeof window === 'undefined' || !order) return;
 
-  const done = () => setTimeout(() => iframe.remove(), 2000);
-  iframe.onload = () => {
-    try {
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-    } catch {
-      /* impression bloquée : on garde le bouton manuel */
-    }
-    done();
-  };
+  // On récupère le contenu généré par ton modèle de ticket
+  const ticketContent = buildTicket ? buildTicket(order, site) : '';
 
-  const doc = iframe.contentWindow.document;
-  doc.open();
-  doc.write(
-    `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Ticket ${order.ref}</title>` +
-      `<style>` +
-      `@page { size: 80mm auto; margin: 0; }` +
-      `html,body { margin:0; padding:6px; }` +
-      `body { width:80mm; font-family:"Courier New",monospace; font-size:12px; line-height:1.35; color:#000; white-space:pre-wrap; word-break:break-word; }` +
-      `</style></head><body>${buildTicket(order, site)}</body></html>`
-  );
-  doc.close();
+  // Nettoyage rapide du HTML pour garder du texte propre pour RawBT
+  const cleanText = ticketContent
+    .replace(/<style([\s\S]*?)<\/style>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<\/tr>/gi, '\n')
+    .replace(/<\/h[1-6]>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .trim();
+
+  // Envoi direct à RawBT
+  window.location.href = `rawbt:${encodeURIComponent(cleanText || `Commande #${order.ref || order.id}`)}`;
 }
 
 // Marque une commande « imprimée » côté serveur (fire-and-forget, idempotent).
