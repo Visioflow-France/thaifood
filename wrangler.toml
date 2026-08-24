@@ -9,3 +9,7 @@ directory = ".open-next/assets"
 [[services]]
 binding = "WORKER_SELF_REFERENCE"
 service = "thaifood"
+[vars]
+FIREBASE_PROJECT_ID="thaifood77-c0e8b"
+FIREBASE_CLIENT_EMAIL="firebase-adminsdk-fbsvc@thaifood77-c0e8b.iam.gserviceaccount.com"
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_live_51TdeU3L3fq2EBN5TgAR216reguqkyvzqlQ1IlTEBxHoINGpSrXNYxOnAto8TnUuxw2bc8M4zWOemgKFwBwdwJWtq00s6qRy5HB"
