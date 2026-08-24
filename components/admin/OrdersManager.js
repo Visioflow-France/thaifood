@@ -182,7 +182,7 @@ function printTicket(order, site) {
     .trim();
 
   // Envoi direct à RawBT
-  window.location.href = `rawbt:${encodeURIComponent(cleanText || `Commande #${order.ref || order.id}`)}`;
+window.location.href = `rawbt:${encodeURIComponent(cleanText || `Commande #${order.ref || order.id}`)}`;
 }
 
 // Marque une commande « imprimée » côté serveur (fire-and-forget, idempotent).
