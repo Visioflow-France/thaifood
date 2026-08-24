@@ -470,9 +470,16 @@ export default function OrdersManager() {
     printTicket(order, site);
   }
 
-  function testPrint() {
-    printTicket(sampleOrder(), site);
-  }
+ function testPrint() {
+  const ticketText = 
+    "   THAI FOOD 77   \n" +
+    "------------------\n" +
+    "TEST D'IMPRESSION\n" +
+    "Imprimante Epson OK\n" +
+    "------------------\n\n\n";
+
+ window.location.href = `rawbt:${encodeURIComponent(ticketText)}`;
+}
 
   // Filtre d'historique par plage de dates.
   function inRange(o) {
