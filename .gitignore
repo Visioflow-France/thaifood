@@ -25,6 +25,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# cloudflare / open-next (générés par `opennextjs-cloudflare build`)
+.open-next
+.wrangler
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -41,3 +45,6 @@ next-env.d.ts
 
 # commandes enregistrées (données client runtime, générées par /api/orders)
 /data/orders.json
+
+.vercel
+.env*

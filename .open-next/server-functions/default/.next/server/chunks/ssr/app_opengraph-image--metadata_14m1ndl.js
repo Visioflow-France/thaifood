@@ -1,3 +1,0 @@
-module.exports=[86895,a=>{"use strict";a.i(99475);var b=a.i(74936);let c=b.OG_SIZE,d=b.OG_CONTENT_TYPE;var e=a.i(52425);let f={alt:"Thaï Food 77 — Restaurant thaï & fast food thaï à Pontault-Combault",contentType:d,dynamic:"force-dynamic",runtime:"nodejs",size:c};async function g(a){let{__metadata_id__:b,...c}=await a.params,d=(0,e.fillMetadataSegment)("/",c,"opengraph-image",!1);return[function(a){let b={alt:a.alt,type:a.contentType||"image/png",url:d+"?707f684b8cbffb7a"},{size:c}=a;return c&&(b.width=c.width,b.height=c.height),b}(f)]}a.s(["default",0,g],86895)},39236,function(a){a.n(a.i(86895))}];
-
-//# sourceMappingURL=app_opengraph-image--metadata_14m1ndl.js.map
