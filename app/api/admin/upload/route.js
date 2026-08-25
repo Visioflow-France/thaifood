@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifySession } from '../../../../lib/auth';
-import { getBucket } from '../../../../lib/firebase-admin';
+import { getBucket, hasFirebaseConfig } from '../../../../lib/firebase-admin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -52,39 +52,45 @@ export async function POST(req) {
   if (!verifySession(req)) {
     return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
   }
-
-  const formData = await req.formData();
-  const file = formData.get('file');
-  if (!file || typeof file === 'string') {
-    return NextResponse.json({ error: 'Aucun fichier reçu.' }, { status: 400 });
+  if (!hasFirebaseConfig()) {
+    return NextResponse.json(
+      { error: "Firebase n'est pas configuré (FIREBASE_PRIVATE_KEY manquant ou invalide) : upload impossible." },
+      { status: 503 }
+    );
   }
-
-  const bytes = await file.arrayBuffer();
-  if (bytes.byteLength > MAX_BYTES) {
-    return NextResponse.json({ error: 'Fichier trop volumineux (max 5 Mo).' }, { status: 400 });
-  }
-  const buf = Buffer.from(bytes);
-
-  const ext = (file.name.split('.').pop() || '').toLowerCase();
-  if (!ALLOWED_EXT.includes(ext)) {
-    return NextResponse.json({ error: 'Format non supporté.' }, { status: 400 });
-  }
-
-  // Vrai contrôle du contenu : magic bytes. Bloque un fichier non-image
-  // renommé en .png (ex : HTML/JS injection sur l'origine Storage).
-  const kind = detectImageKind(buf);
-  if (!kind) {
-    return NextResponse.json({ error: "Le fichier n'est pas une image valide." }, { status: 400 });
-  }
-
-  const stamp = Date.now().toString(36);
-  const rand = Math.random().toString(36).slice(2, 7);
-  // On stocke avec l'extension réelle détectée (cohérente avec le contenu).
-  const storeExt = kind === 'jpeg' ? 'jpg' : kind;
-  const filename = `up_${stamp}_${rand}.${storeExt}`;
-  const filepath = `menu/${filename}`;
 
   try {
+    const formData = await req.formData().catch(() => null);
+    const file = formData?.get('file');
+    if (!file || typeof file === 'string') {
+      return NextResponse.json({ error: 'Aucun fichier reçu.' }, { status: 400 });
+    }
+
+    const bytes = await file.arrayBuffer();
+    if (bytes.byteLength > MAX_BYTES) {
+      return NextResponse.json({ error: 'Fichier trop volumineux (max 5 Mo).' }, { status: 400 });
+    }
+    const buf = Buffer.from(bytes);
+
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!ALLOWED_EXT.includes(ext)) {
+      return NextResponse.json({ error: 'Format non supporté.' }, { status: 400 });
+    }
+
+    // Vrai contrôle du contenu : magic bytes. Bloque un fichier non-image
+    // renommé en .png (ex : HTML/JS injection sur l'origine Storage).
+    const kind = detectImageKind(buf);
+    if (!kind) {
+      return NextResponse.json({ error: "Le fichier n'est pas une image valide." }, { status: 400 });
+    }
+
+    const stamp = Date.now().toString(36);
+    const rand = Math.random().toString(36).slice(2, 7);
+    // On stocke avec l'extension réelle détectée (cohérente avec le contenu).
+    const storeExt = kind === 'jpeg' ? 'jpg' : kind;
+    const filename = `up_${stamp}_${rand}.${storeExt}`;
+    const filepath = `menu/${filename}`;
+
     const bucket = getBucket();
     await bucket.file(filepath).save(buf, {
       metadata: { contentType: MIME_BY_EXT[storeExt] || `image/${storeExt}` },
@@ -94,7 +100,7 @@ export async function POST(req) {
     )}?alt=media`;
     return NextResponse.json({ ok: true, url });
   } catch (e) {
-    console.error('[upload] Storage error:', e.message);
-    return NextResponse.json({ error: 'Upload impossible.' }, { status: 500 });
+    console.error('[upload] Storage error:', e?.message);
+    return NextResponse.json({ error: "Échec de l'upload : " + (e?.message || 'erreur inconnue') }, { status: 500 });
   }
 }

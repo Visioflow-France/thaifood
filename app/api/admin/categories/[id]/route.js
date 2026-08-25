@@ -8,16 +8,29 @@ export async function PUT(req, { params }) {
   if (!verifySession(req)) {
     return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
   }
-  const category = await req.json();
-  category.id = params.id;
-  const saved = await saveCategory(category);
-  return NextResponse.json({ ok: true, category: saved });
+  try {
+    const { id } = await params;
+    const category = await req.json().catch(() => null);
+    if (!category || typeof category !== 'object') {
+      return NextResponse.json({ error: 'Données invalides.' }, { status: 400 });
+    }
+    category.id = id;
+    const saved = await saveCategory(category);
+    return NextResponse.json({ ok: true, category: saved });
+  } catch (e) {
+    return NextResponse.json({ error: e?.message || 'Erreur serveur.' }, { status: 500 });
+  }
 }
 
 export async function DELETE(req, { params }) {
   if (!verifySession(req)) {
     return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
   }
-  await deleteCategory(params.id);
-  return NextResponse.json({ ok: true });
+  try {
+    const { id } = await params;
+    await deleteCategory(id);
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return NextResponse.json({ error: e?.message || 'Erreur serveur.' }, { status: 500 });
+  }
 }

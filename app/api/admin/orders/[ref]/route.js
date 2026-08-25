@@ -11,27 +11,31 @@ export async function PATCH(req, { params }) {
   if (!verifySession(req)) {
     return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
   }
-  const ref = params?.ref;
-  if (!ref) {
-    return NextResponse.json({ error: 'Référence manquante.' }, { status: 400 });
-  }
-  const body = await req.json().catch(() => ({}));
-
-  if (body.action === 'print') {
-    const order = await markOrderPrinted(ref);
-    if (!order) return NextResponse.json({ error: 'Commande introuvable.' }, { status: 404 });
-    return NextResponse.json({ ok: true, order });
-  }
-
-  if (typeof body.status === 'string') {
-    // Whitelist : n'accepte qu'un statut de l'énumération métier.
-    if (!ORDER_STATUSES.includes(body.status)) {
-      return NextResponse.json({ error: 'Statut invalide.' }, { status: 400 });
+  try {
+    const { ref } = await params;
+    if (!ref) {
+      return NextResponse.json({ error: 'Référence manquante.' }, { status: 400 });
     }
-    const order = await updateOrderStatus(ref, body.status);
-    if (!order) return NextResponse.json({ error: 'Commande introuvable.' }, { status: 404 });
-    return NextResponse.json({ ok: true, order });
-  }
+    const body = await req.json().catch(() => ({}));
 
-  return NextResponse.json({ error: 'Action inconnue.' }, { status: 400 });
+    if (body.action === 'print') {
+      const order = await markOrderPrinted(ref);
+      if (!order) return NextResponse.json({ error: 'Commande introuvable.' }, { status: 404 });
+      return NextResponse.json({ ok: true, order });
+    }
+
+    if (typeof body.status === 'string') {
+      // Whitelist : n'accepte qu'un statut de l'énumération métier.
+      if (!ORDER_STATUSES.includes(body.status)) {
+        return NextResponse.json({ error: 'Statut invalide.' }, { status: 400 });
+      }
+      const order = await updateOrderStatus(ref, body.status);
+      if (!order) return NextResponse.json({ error: 'Commande introuvable.' }, { status: 404 });
+      return NextResponse.json({ ok: true, order });
+    }
+
+    return NextResponse.json({ error: 'Action inconnue.' }, { status: 400 });
+  } catch (e) {
+    return NextResponse.json({ error: e?.message || 'Erreur serveur.' }, { status: 500 });
+  }
 }

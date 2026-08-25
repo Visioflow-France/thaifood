@@ -15,7 +15,14 @@ export async function POST(req) {
   if (!verifySession(req)) {
     return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
   }
-  const category = await req.json();
-  const saved = await saveCategory(category);
-  return NextResponse.json({ ok: true, category: saved });
+  try {
+    const category = await req.json().catch(() => null);
+    if (!category || typeof category !== 'object') {
+      return NextResponse.json({ error: 'Données invalides.' }, { status: 400 });
+    }
+    const saved = await saveCategory(category);
+    return NextResponse.json({ ok: true, category: saved });
+  } catch (e) {
+    return NextResponse.json({ error: e?.message || 'Erreur serveur.' }, { status: 500 });
+  }
 }
