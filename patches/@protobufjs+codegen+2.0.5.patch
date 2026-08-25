@@ -1,33 +1,25 @@
 diff --git a/node_modules/@protobufjs/codegen/index.js b/node_modules/@protobufjs/codegen/index.js
-index f3e736c..a1119d1 100644
+index f3e736c..4c31de6 100644
 --- a/node_modules/@protobufjs/codegen/index.js
 +++ b/node_modules/@protobufjs/codegen/index.js
-@@ -38,20 +38,10 @@ function codegen(functionParams, functionName) {
+@@ -38,7 +38,15 @@ function codegen(functionParams, functionName) {
              var source = toString();
              if (codegen.verbose)
                  console.log("codegen: " + source); // eslint-disable-line no-console
 -            source = "return " + source;
--            if (formatStringOrScope) {
--                var scopeKeys   = Object.keys(formatStringOrScope),
--                    scopeParams = new Array(scopeKeys.length + 1),
--                    scopeValues = new Array(scopeKeys.length),
--                    scopeOffset = 0;
--                while (scopeOffset < scopeKeys.length) {
--                    scopeParams[scopeOffset] = scopeKeys[scopeOffset];
--                    scopeValues[scopeOffset] = formatStringOrScope[scopeKeys[scopeOffset++]];
--                }
--                scopeParams[scopeOffset] = source;
--                return Function.apply(null, scopeParams).apply(null, scopeValues); // eslint-disable-line no-new-func
--            }
--            return Function(source)(); // eslint-disable-line no-new-func
 +            // PATCH WORKERS (Cloudflare) : Function()/eval est interdit dans
 +            // le runtime workerd ("Code generation from strings disallowed").
-+            // On remplace la compilation eval par une closure équivalente.
-+            return workerSafeCompile(toString(), functionParams, formatStringOrScope || {});
-         }
- 
-         // otherwise append to body
-@@ -67,17 +57,18 @@ function codegen(functionParams, functionName) {
++            // En Node (build/tests) : eval autorisé → on compile pour de vrai.
++            // Sur Workers : interpréteur sans eval (voir workerSafeCompile).
++            if (typeof globalThis.__WORKERS_NO_EVAL__ !== 'undefined' && globalThis.__WORKERS_NO_EVAL__) {
++                return workerSafeCompile(toString(), functionParams, formatStringOrScope || {});
++            }
++            var src = toString();
++            source = "return " + src;
+             if (formatStringOrScope) {
+                 var scopeKeys   = Object.keys(formatStringOrScope),
+                     scopeParams = new Array(scopeKeys.length + 1),
+@@ -67,17 +75,18 @@ function codegen(functionParams, functionName) {
                  case "i": return String(Math.floor(value));
                  case "j": return JSON.stringify(value);
                  case "s": return String(value);
@@ -51,7 +43,7 @@ index f3e736c..a1119d1 100644
      }
  
      Codegen.toString = toString;
-@@ -110,3 +101,49 @@ function safeFunctionName(name) {
+@@ -110,3 +119,49 @@ function safeFunctionName(name) {
          name = "_" + name;
      return reservedRe.test(name) ? name + "_" : name;
  }

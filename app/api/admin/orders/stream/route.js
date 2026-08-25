@@ -6,13 +6,26 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 // ============================================================================
-//  TEMPS RÉEL DES COMMANDES — Server-Sent Events.
-//  UNE seule écoute onSnapshot (côté serveur, SDK Admin) sur la collection
-//  'orders' par client admin connecté. Firestore n'est JAMAIS exposé au
-//  navigateur (sécurité maximale, PII côté serveur uniquement).
-//  Lecture initiale = N commandes, puis seules les commandes modifiées
-//  génèrent des lectures (économise le quota Spark vs. un polling complet).
+//  TEMPS RÉEL DES COMMANDES — Server-Sent Events, par POLLING Firestore.
+// ----------------------------------------------------------------------------
+//  ⚠️ Cloudflare Workers : Firestore onSnapshot() exige gRPC (http2 + streams
+//  Node), interdit sur workerd ("stream.on is not a function"). On garde la
+//  MÊME interface SSE (events init/changes/fail) mais on interroge Firestore
+//  par requêtes REST simples toutes les POLL_MS. Le dashboard (EventSource)
+//  ne change pas d'un iota.
 // ============================================================================
+
+const POLL_MS = 5000; // rafraîchissement toutes les 5 s
+const MAX_LIFETIME_MS = 240_000; // le client EventSource se reconnecte seul
+
+async function fetchOrders() {
+  const snap = await getDb()
+    .collection('orders')
+    .orderBy('createdAt', 'desc')
+    .limit(100)
+    .get();
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
 
 export async function GET(req) {
   if (!verifySession(req)) {
@@ -30,58 +43,74 @@ export async function GET(req) {
   };
 
   const enc = new TextEncoder();
+  const startedAt = Date.now();
 
   const stream = new ReadableStream({
-    start(controller) {
-      let sentInit = false;
-      let unsub = null;
+    async start(controller) {
+      let closed = false;
+      let timer = null;
+      let lastOrders = null; // précédente liste connue (pour le diff)
+
       const safeEnq = (chunk) => {
-        try { controller.enqueue(enc.encode(chunk)); } catch {}
+        if (closed) return;
+        try { controller.enqueue(enc.encode(chunk)); } catch { closed = true; }
       };
       const send = (event, data) => {
         safeEnq(`event: ${event}\n`);
         safeEnq(`data: ${JSON.stringify(data)}\n\n`);
       };
 
-      send('ping', { at: 'open' });
-
-      try {
-        unsub = getDb()
-          .collection('orders')
-          .orderBy('createdAt', 'desc')
-          .limit(100)
-          .onSnapshot(
-            (snap) => {
-              const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-              if (!sentInit) {
-                sentInit = true;
-                send('init', { orders });
-              } else {
-                const changes = snap.docChanges().map((c) => ({
-                  type: c.type, // 'added' | 'modified' | 'removed'
-                  order: { id: c.doc.id, ...c.doc.data() },
-                }));
-                if (changes.length) send('changes', { changes });
-              }
-            },
-            (err) => {
-              console.error('[orders/stream] écoute interrompue :', err?.details || err?.message);
-              send('fail', { message: err?.details || err?.message || 'écoute interrompue' });
-              try { controller.close(); } catch {}
-            }
-          );
-      } catch (e) {
-        console.error('[orders/stream] init impossible :', e?.message);
-        send('fail', { message: e?.message || 'init impossible' });
-        try { controller.close(); } catch {}
-      }
-
-      // Déconnexion du client → on libère l'écoute Firestore.
       const cleanup = () => {
-        try { unsub && unsub(); } catch {}
+        closed = true;
+        if (timer) clearTimeout(timer);
         try { controller.close(); } catch {}
       };
+
+      const diffAgainst = (prev, cur) => {
+        const prevMap = new Map((prev || []).map((o) => [o.id, o]));
+        const curMap = new Map(cur.map((o) => [o.id, o]));
+        const changes = [];
+        for (const [id, order] of curMap) {
+          const old = prevMap.get(id);
+          if (!old) changes.push({ type: 'added', order });
+          else if (JSON.stringify(old) !== JSON.stringify(order)) {
+            changes.push({ type: 'modified', order });
+          }
+        }
+        for (const id of prevMap.keys()) {
+          if (!curMap.has(id)) changes.push({ type: 'removed', order: { id } });
+        }
+        return changes;
+      };
+
+      const tick = async () => {
+        if (closed) return;
+        try {
+          const orders = await fetchOrders();
+          if (lastOrders === null) {
+            send('init', { orders });
+          } else {
+            const changes = diffAgainst(lastOrders, orders);
+            if (changes.length) send('changes', { changes });
+          }
+          lastOrders = orders;
+        } catch (e) {
+          console.error('[orders/stream] lecture impossible :', e?.details || e?.message);
+          send('fail', { message: e?.details || e?.message || 'lecture impossible' });
+          cleanup();
+          return;
+        }
+        if (Date.now() - startedAt > MAX_LIFETIME_MS) {
+          // Fin propre : le navigateur EventSource se reconnecte automatiquement.
+          cleanup();
+          return;
+        }
+        timer = setTimeout(tick, POLL_MS);
+      };
+
+      send('ping', { at: 'open' });
       req.signal?.addEventListener('abort', cleanup);
+      await tick();
     },
   });
 
