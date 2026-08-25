@@ -41,3 +41,7 @@ next-env.d.ts
 
 # commandes enregistrées (données client runtime, générées par /api/orders)
 /data/orders.json
+
+# build opennext (généré par npx opennextjs-cloudflare build)
+/.open-next/
+/.wrangler/

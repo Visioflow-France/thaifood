@@ -9,8 +9,12 @@ directory = ".open-next/assets"
 [[services]]
 binding = "WORKER_SELF_REFERENCE"
 service = "thaifood"
+
+# ---------------------------------------------------------------------------
+# VARIABLES PUBLIQUES uniquement. Les secrets (FIREBASE_PRIVATE_KEY,
+# STRIPE_SECRET_KEY, ADMIN_PASSWORD, SESSION_SECRET…) sont gérés via
+# `npx wrangler secret put <NOM>` — JAMAIS dans ce fichier (repo public !).
+# ---------------------------------------------------------------------------
 [vars]
-FIREBASE_PROJECT_ID="thaifood77-c0e8b"
-FIREBASE_CLIENT_EMAIL="firebase-adminsdk-fbsvc@thaifood77-c0e8b.iam.gserviceaccount.com"
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_live_51TdeU3L3fq2EBN5TgAR216reguqkyvzqlQ1IlTEBxHoINGpSrXNYxOnAto8TnUuxw2bc8M4zWOemgKFwBwdwJWtq00s6qRy5HB"
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDO9h5cqGw6nxJU\nh+jq3GhXyN9CFkhfyMW8P1HV1CcG+Ngo+li7FQS/8+G9HxQiUQu4y/4wgcbrc5RH\niAyzR8kW9BIwgJ1X8ttEqAEhadPeTfoZuJElXJrYoMNSxBgUgBOrVkiPN6sR52M7\n56dffCtLkc9+gEp0oObLioRn9/D1yEpyqSNhSinVzqdkyjlrFY7gqXKNUE2Vs9HM\n7A6rXNB8iCAask9yilUUoFGC+clHLAuLxsaOqf7zYcAwbxMZ61nZxbU49SE/drQ9\nHjdmuR7TI7CXv/ytisBNQ0vi0mTzs9gR9mWd7oNGU0VUnmoRGfdZqwgRHJt97AYF\nbaldpr8vAgMBAAECggEAX3Gac/HKI8i7S9d3v2QRDLba2x/qlZ3CLvvmkh2qN+ln\nypIVfIWHcLyYlL6x6teEd98/pQAci/X74ncoID/RSXAauVp+9ZHOtB1klBO5fRJp\n7hWzfk70LEYLfe5oCoA8Ue5TPRUXpASZO4WsJvldABdI4RZp/9o6RZDmWgo6iiXV\nL7tcqzFN5FyQhlfOM+KhsEaCbvGcYwf4FzGkLI4Hjr7YRMqvlQ81URahfiqswnwt\n/j8H0MDkqr9rUjSIyyZ7QPe1tfX60DfgWNVmZW7sRNAt3vsbqu1Ag9GUcCcd6O+o\nReakd3TG7IQmTnGV+krxt5bsAqNl4shXmo7B4ycXNQKBgQDy1DWgypb4DFnsOCH5\nfiO5rDRJD7Z6LofDjiFnsGROIOrCwa0JWlOP9lBVGzmG3oUIk7v6Qm64nBdibGo9\nzZ+1UuKbypBcBa+sfRVoHPwewt+rpWYlDmq+yWZflBz2aXBjwN8Qkd6o6wEsR8lZ\n7wB4N91Seq34/OfI3M85EslqGwKBgQDaL9836RGnXXK92hDBSRkSD2CnZHx8gXcE\nInpXyDPjiNRiBatwioNUR5wH71qO18HE7NPQIeQuKENW8jQ7jJC0nL/Dptmv2XGl\nQ9ZrGoOYhX1pe5PLWRGEoSGNCnJY19iTQg2PBmbY89FurMW2Hep8m42vrdt8SfvJ\nXO2QUsjQfQKBgQClbUpnkvyMWaW9FnSWyoc+C4HHMEwpKp/U6nP5dqKu0x/7tAPU\n9lMtJSmPATAMoHVS5YpPMIjLfZM0uxUZq4ac+a1lYvc7qagHQ2Oc/PoJXssP3Wsb\n3Zl9BimW/YlJmYU2gAO2/xkITKkM6I7UlMzmGXDOqsLweCLTpRILGLBcdwKBgD+O\nBkVw/JV14QBwTsUel9Ds7ciUurZBt/taV6zOQl8a8lKDOEcV8d9Q5KBjFkvZiTXl\njmVoGeFgFQ10i8Z00Ynqxukk5vAUNMhhFEoqdP6uk7NwLcLj9PhfPzioPFqotQtg\nCDcLNFYp322Poh/EYxNc9E6iI/b2TgN/sCuEEb65AoGAYaLmFCyY8KwBOaiqL2iL\n5tLUMVp/WHm6Buw/iIKJhTBprSBDtRtfSsPota24a4CwjJU6iAF1bWy9l9HLdkbL\nUGQUv5YFANh58LbctW3VLuukYjdRdvQt+m0dNr2BRz5wbZ0ModRfoI3mNsoweS45\nSK8U9bBFyhbV5sMcOKlOl7g=\n-----END PRIVATE KEY-----\n"
+FIREBASE_PROJECT_ID="thaifood77-c0e8b"

@@ -1,0 +1,103 @@
+diff --git a/node_modules/@protobufjs/codegen/index.js b/node_modules/@protobufjs/codegen/index.js
+index f3e736c..a1119d1 100644
+--- a/node_modules/@protobufjs/codegen/index.js
++++ b/node_modules/@protobufjs/codegen/index.js
+@@ -38,20 +38,10 @@ function codegen(functionParams, functionName) {
+             var source = toString();
+             if (codegen.verbose)
+                 console.log("codegen: " + source); // eslint-disable-line no-console
+-            source = "return " + source;
+-            if (formatStringOrScope) {
+-                var scopeKeys   = Object.keys(formatStringOrScope),
+-                    scopeParams = new Array(scopeKeys.length + 1),
+-                    scopeValues = new Array(scopeKeys.length),
+-                    scopeOffset = 0;
+-                while (scopeOffset < scopeKeys.length) {
+-                    scopeParams[scopeOffset] = scopeKeys[scopeOffset];
+-                    scopeValues[scopeOffset] = formatStringOrScope[scopeKeys[scopeOffset++]];
+-                }
+-                scopeParams[scopeOffset] = source;
+-                return Function.apply(null, scopeParams).apply(null, scopeValues); // eslint-disable-line no-new-func
+-            }
+-            return Function(source)(); // eslint-disable-line no-new-func
++            // PATCH WORKERS (Cloudflare) : Function()/eval est interdit dans
++            // le runtime workerd ("Code generation from strings disallowed").
++            // On remplace la compilation eval par une closure équivalente.
++            return workerSafeCompile(toString(), functionParams, formatStringOrScope || {});
+         }
+ 
+         // otherwise append to body
+@@ -67,17 +57,18 @@ function codegen(functionParams, functionName) {
+                 case "i": return String(Math.floor(value));
+                 case "j": return JSON.stringify(value);
+                 case "s": return String(value);
++                case "%": return "%";
++                default:  return undefined; // or throw?
+             }
+-            return "%";
+         });
+-        if (formatOffset !== formatParams.length)
+-            throw Error("parameter count mismatch");
+         body.push(formatStringOrScope);
+         return Codegen;
+     }
+ 
+-    function toString(functionNameOverride) {
+-        return "function " + safeFunctionName(functionNameOverride || functionName) + "(" + (functionParams && functionParams.join(",") || "") + "){\n  " + body.join("\n  ") + "\n}";
++    function toString(funcName) {
++        return "function " + (funcName || functionName || "") + "(" + ((functionParams && functionParams.join(",")) || "") + "){\n"
++            + "  " + body.join("\n  ")
++            + "\n}";
+     }
+ 
+     Codegen.toString = toString;
+@@ -110,3 +101,49 @@ function safeFunctionName(name) {
+         name = "_" + name;
+     return reservedRe.test(name) ? name + "_" : name;
+ }
++
++// ===========================================================================
++//  PATCH WORKERS — génération du constructeur de message SANS eval.
++//  Motif généré par Type.generateConstructor de protobufjs :
++//    function Name(p) {
++//      this.a = [];
++//      this.b = {};
++//      if(p)for(var ks=Object.keys(p),i=0;i<ks.length;++i)
++//        if(p[ks[i]]!=null&&ks[i]!=="__proto__")
++//          this[ks[i]]=p[ks[i]];
++//    }
++//  On reconnaît ce motif et on retourne une closure équivalente. Tout autre
++//  motif échoue immédiatement avec un message clair (pas d'échec silencieux).
++// ===========================================================================
++
++function workerSafeCompile(source, functionParams, scope) {
++    var ctorMatch = source.match(/^function\s+([\w$]*)\s*\(\s*(\w*)\s*\)\s*\{/);
++    if (
++        ctorMatch &&
++        /if\s*\(\s*\w+\s*\)\s*for\s*\(/.test(source) &&
++        /this\[ks\[i\]\]\s*=/.test(source)
++    ) {
++        // Initialisations "this.x = [];" / "this.x = {};" avant le if(p).
++        var initRe = /this\.([\w$]+)\s*=\s*(\[\]|\{\})\s*;/g;
++        var inits = [];
++        var mm;
++        while ((mm = initRe.exec(source)) !== null) {
++            inits.push({ name: mm[1], isArray: mm[2] === "[]" });
++        }
++        // Closure équivalente, sans eval.
++        var Ctor = function (p) {
++            for (var j = 0; j < inits.length; j++) {
++                this[inits[j].name] = inits[j].isArray ? [] : {};
++            }
++            if (p)
++                for (var ks = Object.keys(p), i = 0; i < ks.length; ++i) {
++                    if (p[ks[i]] != null && ks[i] !== "__proto__")
++                        this[ks[i]] = p[ks[i]];
++                }
++        };
++        return Ctor;
++    }
++    throw new Error(
++        "protobufjs codegen: motif non supporté sans eval -> " + source.slice(0, 120)
++    );
++}
