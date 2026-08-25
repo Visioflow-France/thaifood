@@ -12,6 +12,12 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // firebase-admin est NON-bundlé par défaut par Next (liste "server external
+  // packages", pensée pour Node/Vercel). Sous Cloudflare Workers, le require
+  // runtime est impossible ("Code generation from strings disallowed") : on le
+  // force à être bundlé dans le Worker. transpilePackages le retire de cette
+  // liste par défaut (webpack-config.js : externes − transpilePackages).
+  transpilePackages: ['firebase-admin'],
   async headers() {
     return [
       {
