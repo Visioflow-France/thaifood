@@ -16,7 +16,7 @@ import { formatPrice } from '../../lib/pricing';
 //  l'imprimante thermique en « imprimante par défaut » pour aller plus vite).
 // ============================================================================
 
-const FALLBACK_POLL_MS = 15000; // secours si le temps réel (SSE) est indisponible
+const FALLBACK_POLL_MS = 10000; // synchronisation des commandes (toutes les 10 s)
 const PRINTED_KEY = 'tf77_printed_orders';
 const SEED_KEY = 'tf77_printed_seeded';
 const AUTOPRINT_KEY = 'tf77_autoprint';
@@ -283,6 +283,7 @@ export default function OrdersManager() {
   const [range, setRange] = useState('all'); // 'all' | 'today' | '7d'
   const [toast, setToast] = useState(''); // "Nouvelle commande TF-XXXX"
   const [err, setErr] = useState('');
+  const [info, setInfo] = useState(''); // bandeau informatif (mode polling = normal)
   const printedRef = useRef(new Set());
   const seededRef = useRef(false);
   // Refs pour éviter les closures périmées dans les callbacks temps réel (SSE).
@@ -376,8 +377,10 @@ export default function OrdersManager() {
     }
   }, [ingest]);
 
-  // Temps réel via SSE (onSnapshot serveur sur la collection 'orders').
-  // Fallback : polling toutes les FALLBACK_POLL_MS si le flux est indisponible.
+  // Synchronisation des commandes. Sous Cloudflare Workers le flux SSE n'est
+  // pas disponible (Firestore gRPC impossible sur workerd) : on interroge
+  // directement /api/admin/orders toutes les FALLBACK_POLL_MS. Sur un
+  // hébergement Node classique (dev local), le SSE est essayé d'abord.
   useEffect(() => {
     let es;
     let pollId;
@@ -385,12 +388,30 @@ export default function OrdersManager() {
 
     const startFallback = () => {
       if (pollId) return;
-      setErr(`Temps réel indisponible — synchronisation toutes les ${FALLBACK_POLL_MS / 1000}s.`);
+      // Message informatif (pas une alerte rouge) : le polling est le
+      // fonctionnement NORMAL sous Cloudflare Workers.
+      setInfo(`Synchronisation automatique toutes les ${FALLBACK_POLL_MS / 1000} s.`);
       refresh();
       pollId = setInterval(refresh, FALLBACK_POLL_MS);
     };
 
-    if (typeof window !== 'undefined' && 'EventSource' in window) {
+    // En prod (Cloudflare), la route stream répond 503 en mode REST : on
+    // détecte ce cas AVANT d'ouvrir l'EventSource pour éviter une erreur
+    // réseau dans la console.
+    let streamAvailable = true;
+    fetch('/api/admin/orders/stream', { cache: 'no-store' })
+      .then((r) => {
+        if (r.status === 503) {
+          streamAvailable = false;
+          startFallback();
+        }
+      })
+      .catch(() => {
+        streamAvailable = false;
+        startFallback();
+      });
+
+    if (streamAvailable && typeof window !== 'undefined' && 'EventSource' in window) {
       es = new EventSource('/api/admin/orders/stream');
       es.addEventListener('open', () => setErr(''));
       es.addEventListener('init', (ev) => {
@@ -461,7 +482,9 @@ export default function OrdersManager() {
       await api(`/api/admin/orders/${encodeURIComponent(order.ref)}`, 'PATCH', { status });
       setOrders((prev) => prev.map((o) => (o.ref === order.ref ? { ...o, status } : o)));
     } catch (e) {
-      alert(e.message);
+      // Bandeau d'erreur non bloquant : le statut reste modifiable.
+      setErr(`Statut de ${order.ref} non modifié : ${e.message}`);
+      setTimeout(() => setErr(''), 6000);
     }
   }
 
@@ -573,6 +596,12 @@ export default function OrdersManager() {
         <div className="mb-4 flex items-center gap-2 text-sm text-gold-200 bg-gold-400/10 border border-gold-400/30 rounded-lg px-3 py-2">
           <iconify-icon icon="solar:bell-bing-linear" className="text-base text-gold-400" />
           {toast}
+        </div>
+      )}
+      {info && !err && (
+        <div className="mb-4 text-[12px] text-cream-50/50 bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 flex items-center gap-2">
+          <iconify-icon icon="solar:refresh-linear" className="text-base text-gold-400/70" />
+          {info}
         </div>
       )}
       {err && (

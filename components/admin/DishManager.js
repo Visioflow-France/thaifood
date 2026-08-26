@@ -58,7 +58,9 @@ export default function DishManager({ dishes, categories, reload }) {
       await api(`/api/admin/dishes/${d.id}`, 'DELETE');
       await reload();
     } catch (e) {
-      alert(e.message);
+      // Affiché dans le formulaire au lieu d'un alert() bloquant.
+      setError(`Suppression impossible : ${e.message}`);
+      setTimeout(() => setError(''), 6000);
     }
   }
 

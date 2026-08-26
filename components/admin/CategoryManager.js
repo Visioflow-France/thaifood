@@ -37,7 +37,10 @@ export default function CategoryManager({ categories, dishes, reload }) {
       await api(`/api/admin/categories/${cat.id}`, 'PUT', { ...cat, ...patch });
       await reload();
     } catch (e) {
-      alert(e.message);
+      // Message visible sans bloquer le navigateur (alert() gèle l'onglet et
+      // peut faire croire que le dashboard « ne répond plus »).
+      setError(`« ${cat.name} » non enregistré : ${e.message}`);
+      setTimeout(() => setError(''), 6000);
     }
   }
 
@@ -47,8 +50,13 @@ export default function CategoryManager({ categories, dishes, reload }) {
       ? `Supprimer « ${cat.name} » ? ${count} plat(s) s'y trouvent : ils apparaîtront toujours dans « Tout » mais plus sous cette catégorie.`
       : `Supprimer « ${cat.name} » ?`;
     if (!confirm(msg)) return;
-    await api(`/api/admin/categories/${cat.id}`, 'DELETE');
-    await reload();
+    try {
+      await api(`/api/admin/categories/${cat.id}`, 'DELETE');
+      await reload();
+    } catch (e) {
+      setError(`Suppression impossible : ${e.message}`);
+      setTimeout(() => setError(''), 6000);
+    }
   }
 
   return (
