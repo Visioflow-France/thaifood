@@ -90,7 +90,9 @@ export default function RootLayout({ children }) {
   const setJsClass = "document.documentElement.classList.add('js')";
 
   return (
-    <html lang="fr">
+    // suppressHydrationWarning : le script inline ci-dessous ajoute la classe
+    // `js` sur <html> avant l'hydratation React → divergence attendue.
+    <html lang="fr" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: setJsClass }} />
         <meta charSet="UTF-8" />

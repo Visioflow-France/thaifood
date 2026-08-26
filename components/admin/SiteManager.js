@@ -305,13 +305,13 @@ export default function SiteManager() {
                 <Input value={fields.publicationDirector || ''} onChange={(e) => setField('publicationDirector', e.target.value)} />
               </Field>
               <Field label="Hébergeur (nom)">
-                <Input value={fields.hostName || ''} onChange={(e) => setField('hostName', e.target.value)} placeholder="Vercel Inc." />
+                <Input value={fields.hostName || ''} onChange={(e) => setField('hostName', e.target.value)} placeholder="Cloudflare, Inc." />
               </Field>
               <Field label="Hébergeur (site web)">
-                <Input value={fields.hostUrl || ''} onChange={(e) => setField('hostUrl', e.target.value)} placeholder="https://vercel.com" />
+                <Input value={fields.hostUrl || ''} onChange={(e) => setField('hostUrl', e.target.value)} placeholder="https://www.cloudflare.com" />
               </Field>
               <Field label="Hébergeur (adresse)" className="sm:col-span-2">
-                <Input value={fields.hostAddress || ''} onChange={(e) => setField('hostAddress', e.target.value)} placeholder="340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis" />
+                <Input value={fields.hostAddress || ''} onChange={(e) => setField('hostAddress', e.target.value)} placeholder="101 Townsend Street, San Francisco, CA 94107, États-Unis" />
               </Field>
             </div>
 

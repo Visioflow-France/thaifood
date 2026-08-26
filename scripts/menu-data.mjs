@@ -17,6 +17,7 @@ const B = 'https://thaifood77340.com/image/cache/catalog';
 const img = (n) => `${B}/customer/thaifood77340_com/images/p${n}-60x40.png`;
 const design = (n) => `${B}/customer/thaifood77340_com/0design/p${n}-60x40.png`;
 const fond = (n, sub, ext = 'jpg') => `${B}/_Fond-blanc-japonais/${sub}/p${n}-60x40.${ext}`;
+// NB : p266 (Ravioli Aux Crevettes) est servi en .JPG majuscule côté source.
 const emoji = (n) => `${B}/emoji_category/p${n}-60x40.png`;
 const gif = (n) => `${B}/gif_success/p${n}-60x40.gif`;
 
@@ -198,13 +199,19 @@ export const dishes = [
   { c: 'specialites-thai', n: 'Dorade Royale Grillée', p: 18.80, i: emoji(108), d: 'À la sauce aigre douce ou pimentée. Avec riz nature ou riz cantonnais en supplément +3,50 €' },
 
   // ---------------- MAKI ----------------
+  { c: 'maki', n: 'M1 · Concombre', p: 5.00, i: img(109), d: '' },
+  { c: 'maki', n: 'M2 · Cheese', p: 5.00, i: img(110), d: '' },
   { c: 'maki', n: 'M3 · Avocat Saumon', p: 5.50, i: img(111), d: '' },
   { c: 'maki', n: 'M4 · Avocat Saumon Cheese', p: 6.00, i: img(112), d: '' },
   { c: 'maki', n: 'M5 · Thon Cuit Mayo', p: 6.00, i: img(113), d: '' },
   { c: 'maki', n: 'M6 · Poulet Spicy', p: 6.00, i: fond(114, 'maki'), d: '' },
   { c: 'maki', n: 'M7 · Saumon Cheese', p: 6.00, i: fond(115, 'maki'), d: '' },
+  { c: 'maki', n: 'M8 · Saumon', p: 6.00, i: fond(116, 'maki'), d: '' },
 
   // ---------------- SAUMON ROLL ----------------
+  { c: 'saumon-roll', n: 'SR1 · Concombre', p: 6.50, i: img(117), d: '' },
+  { c: 'saumon-roll', n: 'SR2 · Cheese', p: 7.00, i: img(118), d: '' },
+  { c: 'saumon-roll', n: 'SR3 · Avocat', p: 7.00, i: img(119), d: '' },
   { c: 'saumon-roll', n: 'SR4 · Avocat Cheese', p: 7.50, i: img(120), d: '' },
   { c: 'saumon-roll', n: 'SR5 · Poulet Spicy', p: 7.50, i: fond(121, 'saumon_roll'), d: '' },
   { c: 'saumon-roll', n: 'SR6 · Thon Cuit Mayo', p: 8.00, i: fond(122, 'saumon_roll'), d: '' },
@@ -212,7 +219,9 @@ export const dishes = [
   { c: 'saumon-roll', n: 'SR8 · Foie Gras Halal', p: 8.00, i: gif(124), d: '' },
 
   // ---------------- EGGS ROLL ----------------
+  { c: 'eggs-roll', n: 'E1 · Concombre', p: 5.50, i: fond(125, 'egg_roll'), d: '' },
   { c: 'eggs-roll', n: 'E2 · Avocat Saumon', p: 6.50, i: fond(126, 'egg_roll'), d: '' },
+  { c: 'eggs-roll', n: 'E3 · Cheese', p: 6.50, i: fond(127, 'egg_roll'), d: '' },
   { c: 'eggs-roll', n: 'E4 · Poulet Spicy', p: 6.50, i: fond(128, 'egg_roll'), d: '' },
   { c: 'eggs-roll', n: 'E5 · Avocat Saumon Cheese', p: 7.00, i: fond(129, 'egg_roll'), d: '' },
   { c: 'eggs-roll', n: 'E6 · Thon Cuit Mayo', p: 7.00, i: fond(130, 'egg_roll'), d: '' },
@@ -223,7 +232,9 @@ export const dishes = [
   { c: 'eggs-roll', n: 'E11 · Avocat Cheese', p: 7.50, i: fond(135, 'egg_roll'), d: '' },
 
   // ---------------- CRISPY ROLL ----------------
+  { c: 'crispy-roll', n: 'CR1 · Concombre', p: 5.50, i: img(136), d: '' },
   { c: 'crispy-roll', n: 'CR2 · Avocat Saumon', p: 6.50, i: img(137), d: '' },
+  { c: 'crispy-roll', n: 'CR3 · Cheese', p: 6.50, i: fond(138, 'california_frit'), d: '' },
   { c: 'crispy-roll', n: 'CR4 · Poulet Crispy', p: 6.50, i: fond(138, 'california_frit'), d: '' },
   { c: 'crispy-roll', n: 'CR5 · Avocat Saumon Cheese', p: 7.00, i: img(140), d: '' },
   { c: 'crispy-roll', n: 'CR6 · Tempura Cheese', p: 7.00, i: img(141), d: '' },
@@ -234,18 +245,26 @@ export const dishes = [
 
   // ---------------- CALIFORNIA FRITS ----------------
   { c: 'california-frits', n: 'CF1 · Avocat Saumon', p: 8.50, i: img(146), d: '' },
+  { c: 'california-frits', n: 'CF2 · Thon Cuit', p: 8.50, i: img(147), d: '' },
+  { c: 'california-frits', n: 'CF3 · Crevettes', p: 8.50, i: img(148), d: '' },
   { c: 'california-frits', n: 'CF4 · Poulet Spicy', p: 8.50, i: img(149), d: '' },
+  { c: 'california-frits', n: 'CF5 · Tempura', p: 8.50, i: fond(150, 'california_frit'), d: '' },
   { c: 'california-frits', n: 'CF6 · Saumon Cheese', p: 8.50, i: fond(151, 'california_frit'), d: '' },
 
   // ---------------- ICE ROLLS ----------------
+  { c: 'ice-rolls', n: 'I1 · Concombre', p: 5.50, i: fond(152, 'maki_neige'), d: '' },
   { c: 'ice-rolls', n: 'I2 · Avocat Saumon', p: 6.50, i: img(153), d: '' },
   { c: 'ice-rolls', n: 'I3 · Avocat Saumon Cheese', p: 7.00, i: img(154), d: '' },
-  { c: 'ice-rolls', n: 'I5 · Thon Cuit Mayo', p: 7.00, i: img(157), d: '' },
+  { c: 'ice-rolls', n: 'I4 · Cheese', p: 6.50, i: fond(155, 'maki_neige'), d: '' },
+  { c: 'ice-rolls', n: 'I5 · Thon Cuit Mayo', p: 7.00, i: img(156), d: '' },
   { c: 'ice-rolls', n: 'I6 · Poulet Spicy', p: 7.00, i: img(158), d: '' },
   { c: 'ice-rolls', n: 'I7 · Avocat Cheese', p: 7.00, i: img(159), d: '' },
   { c: 'ice-rolls', n: 'I8 · Tempura Cheese', p: 7.50, i: img(160), d: '' },
 
   // ---------------- MAKI PRINTEMPS ----------------
+  { c: 'maki-printemps', n: 'MP1 · Concombre', p: 6.50, i: img(160), d: '' },
+  { c: 'maki-printemps', n: 'MP2 · Cheese', p: 6.50, i: fond(161, 'printemps_roll'), d: '' },
+  { c: 'maki-printemps', n: 'MP3 · Poulet', p: 7.00, i: fond(162, 'printemps_roll'), d: '' },
   { c: 'maki-printemps', n: 'MP4 · Avocat Saumon', p: 7.50, i: img(163), d: '' },
   { c: 'maki-printemps', n: 'MP5 · Avocat Saumon Cheese', p: 8.00, i: fond(164, 'printemps_roll'), d: '' },
   { c: 'maki-printemps', n: 'MP6 · Avocat Saumon Menthe Coriandre', p: 8.00, i: img(165), d: '' },
@@ -265,14 +284,19 @@ export const dishes = [
   { c: 'california', n: 'C10 · Thon Cuit Mayo', p: 7.50, i: fond(177, 'california'), d: '' },
 
   // ---------------- AVOCATS ROLL ----------------
+  { c: 'avocats-roll', n: 'A1 · Concombre', p: 8.00, i: img(178), d: '' },
+  { c: 'avocats-roll', n: 'A2 · Saumon', p: 8.50, i: img(179), d: '' },
   { c: 'avocats-roll', n: 'A3 · Saumon Cheese', p: 9.00, i: fond(180, 'printemps_roll'), d: '' },
   { c: 'avocats-roll', n: 'A4 · Thon Cuit Mayo', p: 8.50, i: fond(181, 'printemps_roll'), d: '' },
   { c: 'avocats-roll', n: 'A5 · Poulet Spicy', p: 8.00, i: fond(182, 'printemps_roll'), d: '' },
   { c: 'avocats-roll', n: 'A6 · Tempura Cheese', p: 9.00, i: img(183), d: '' },
   { c: 'avocats-roll', n: 'A7 · Crevettes Cheese', p: 8.50, i: img(184), d: '' },
   { c: 'avocats-roll', n: 'A8 · Foie Gras Halal', p: 9.00, i: gif(185), d: '' },
+  { c: 'avocats-roll', n: 'A9 · Cheese', p: 8.00, i: fond(186, 'printemps_roll'), d: '' },
 
   // ---------------- SUSHI (servis par paire) ----------------
+  { c: 'sushi', n: 'S1 · Saumon', p: 4.00, i: img(187), d: 'Servis par paire' },
+  { c: 'sushi', n: 'S2 · Crevettes', p: 4.00, i: img(188), d: 'Servis par paire' },
   { c: 'sushi', n: 'S3 · Saumon Avocat', p: 4.50, i: img(189), d: 'Servis par paire' },
   { c: 'sushi', n: 'S4 · Saumon Cheese', p: 4.50, i: img(190), d: 'Servis par paire' },
 
@@ -341,6 +365,25 @@ export const dishes = [
   { c: 'boissons', n: 'Jus De Fruit Asiatique', p: 2.90, i: emoji(252), d: '25 cl' },
   { c: 'boissons', n: 'Jus De Fruit Asiatique', p: 4.90, i: emoji(253), d: '50 cl' },
   { c: 'boissons', n: 'San Pellegrino', p: 3.00, i: fond(254, 'boisson/boisson_sans_alcool'), d: '50 cl' },
+  { c: 'boissons', n: 'Aloe Vera', p: 3.20, i: img(255), d: '50 cl' },
+  { c: 'boissons', n: 'Red Bull', p: 4.20, i: fond(256, 'boisson/boisson_sans_alcool'), d: '25 cl' },
+  { c: 'boissons', n: 'Bubble Tea', p: 4.80, i: emoji(257), d: '34 cl' },
   { c: 'boissons', n: 'Ice Tea Chinois', p: 4.00, i: img(261), d: '1,25 L' },
   { c: 'boissons', n: 'Café', p: 2.00, i: fond(263, 'boisson/photo_sur_place'), d: '' },
+  { c: 'boissons', n: 'Thé', p: 2.50, i: fond(264, 'boisson/photo_sur_place'), d: '' },
+  { c: 'boissons', n: 'Coca', p: 2.00, i: img(240), d: '33 cl' },
+  { c: 'boissons', n: 'Coca Zéro', p: 2.00, i: img(247), d: '33 cl' },
+  { c: 'boissons', n: 'Coca Cerise', p: 2.00, i: img(241), d: '33 cl' },
+  { c: 'boissons', n: 'Fanta', p: 2.00, i: img(246), d: '33 cl' },
+  { c: 'boissons', n: 'Sprite', p: 2.00, i: img(250), d: '33 cl' },
+  { c: 'boissons', n: '7up', p: 2.00, i: img(249), d: '33 cl' },
+  { c: 'boissons', n: 'Orangina', p: 2.00, i: img(245), d: '33 cl' },
+  { c: 'boissons', n: 'Oasis', p: 2.00, i: img(244), d: '33 cl' },
+  { c: 'boissons', n: 'Tropico', p: 2.00, i: img(248), d: '33 cl' },
+  { c: 'boissons', n: 'Dada', p: 2.00, i: emoji(242), d: '33 cl' },
+  { c: 'boissons', n: 'Fuze Tea', p: 2.00, i: img(243), d: '33 cl' },
+  { c: 'boissons', n: 'Coca (bouteille)', p: 4.50, i: fond(258, 'boisson/boisson_sans_alcool'), d: '1,25 L' },
+  { c: 'boissons', n: 'Fanta (bouteille)', p: 4.50, i: fond(259, 'boisson/boisson_sans_alcool'), d: '1,25 L' },
+  { c: 'boissons', n: 'Ice Tea (bouteille)', p: 4.50, i: fond(260, 'boisson/boisson_sans_alcool'), d: '1,25 L' },
+  { c: 'boissons', n: 'Oasis (bouteille)', p: 5.00, i: img(262), d: '2 L' },
 ];

@@ -27,6 +27,12 @@ const EMPTY = {
   address: '',
   postalCode: '',
   city: '',
+  // Détails de livraison (facultatifs) — précisés si nécessaire.
+  building: '',
+  door: '',
+  accessCode: '',
+  intercom: '',
+  floor: '',
   notes: '',
 };
 
@@ -217,6 +223,44 @@ export default function Checkout() {
                 required
               />
             </div>
+            {/* Détails d'accès (facultatifs) : aident le livreur à trouver/entrer. */}
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <Field
+                label="N° de bâtiment"
+                name="building"
+                value={form.building}
+                onChange={setField}
+                placeholder="Bât. B (optionnel)"
+              />
+              <Field
+                label="N° de porte"
+                name="door"
+                value={form.door}
+                onChange={setField}
+                placeholder="Porte 17 (optionnel)"
+              />
+              <Field
+                label="Code d'accès"
+                name="accessCode"
+                value={form.accessCode}
+                onChange={setField}
+                placeholder="1234A (optionnel)"
+              />
+              <Field
+                label="Interphone"
+                name="intercom"
+                value={form.intercom}
+                onChange={setField}
+                placeholder="Nom sur l'interphone (optionnel)"
+              />
+              <Field
+                label="Étage"
+                name="floor"
+                value={form.floor}
+                onChange={setField}
+                placeholder="3e étage (optionnel)"
+              />
+            </div>
           </Section>
         )}
 
@@ -226,7 +270,7 @@ export default function Checkout() {
             value={form.notes}
             onChange={(e) => setField('notes', e.target.value)}
             rows={2}
-            placeholder="Allergies, sans piment, interphone, déposé à la porte…"
+            placeholder="Allergies, sans piment, déposé à la porte…"
             className="form-input w-full px-3.5 py-2.5 rounded-lg text-sm resize-none"
           />
         </Section>

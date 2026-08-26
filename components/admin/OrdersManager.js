@@ -143,6 +143,15 @@ function buildTicket(order, site) {
   if (order.type === 'delivery' && c.address) {
     lines.push(`Livraison : ${c.address}`);
     if (c.postalCode || c.city) lines.push(`           ${c.postalCode || ''} ${c.city || ''}`.trim());
+    // Détails d'accès facultatifs (uniquement s'ils sont renseignés).
+    const access = [
+      c.building && `Bat ${c.building}`,
+      c.door && `Porte ${c.door}`,
+      c.floor && `Etage ${c.floor}`,
+      c.intercom && `Int ${c.intercom}`,
+      c.accessCode && `Code ${c.accessCode}`,
+    ].filter(Boolean);
+    if (access.length) lines.push(access.join(' · '));
   }
   if (c.notes) {
     lines.push('');
@@ -221,6 +230,11 @@ function sampleOrder() {
       address: '12 rue des Lilas',
       postalCode: '77000',
       city: 'Melun',
+      building: 'B',
+      door: '17',
+      floor: '3',
+      intercom: 'Dupont',
+      accessCode: '1234A',
       notes: 'Sans piment — test d’impression.',
     },
   };
@@ -713,6 +727,23 @@ function OrderCard({ order, onStatusChange, onReprint }) {
               <span>
                 {c.address}{c.address && (c.postalCode || c.city) ? ', ' : ''}
                 {[c.postalCode, c.city].filter(Boolean).join(' ')}
+              </span>
+            </p>
+          )}
+          {order.type === 'delivery' &&
+            [c.building, c.door, c.floor, c.intercom, c.accessCode].some(Boolean) && (
+            <p className="text-cream-50/55 text-xs flex items-start gap-1.5">
+              <iconify-icon icon="solar:key-minimalistic-square-linear" className="text-xs text-gold-400/70 mt-0.5" />
+              <span>
+                {[
+                  c.building && `Bât ${c.building}`,
+                  c.door && `Porte ${c.door}`,
+                  c.floor && `Étage ${c.floor}`,
+                  c.intercom && `Interphone ${c.intercom}`,
+                  c.accessCode && `Code ${c.accessCode}`,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </span>
             </p>
           )}

@@ -141,6 +141,7 @@ function Shell({ children }) {
 function Login({ onSuccess }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -185,13 +186,28 @@ function Login({ onSuccess }) {
         </div>
         <div>
           <span className="block text-xs font-medium text-cream-50/60 mb-1">Mot de passe</span>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            placeholder="••••••••"
-          />
+          <div className="relative">
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              placeholder="••••••••"
+              className="pr-11"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              title={showPassword ? 'Masquer' : 'Afficher'}
+              className="absolute inset-y-0 right-0 px-3 flex items-center text-cream-50/40 hover:text-gold-400 transition-colors"
+            >
+              <iconify-icon
+                icon={showPassword ? 'solar:eye-close-linear' : 'solar:eye-linear'}
+                className="text-lg pointer-events-none"
+              />
+            </button>
+          </div>
         </div>
         {error && <p className="text-sm text-red-300">{error}</p>}
         <Btn type="submit" className="w-full" disabled={busy}>

@@ -59,13 +59,6 @@ export default function Hero() {
               Réserver une table
               <iconify-icon icon={phone ? 'solar:phone-linear' : 'solar:arrow-right-linear'} className="text-base" />
             </a>
-            <a
-              href="#commander"
-              className="cta-ghost px-7 py-3.5 rounded-full text-sm font-medium inline-flex items-center gap-2"
-            >
-              Commander en ligne
-              <iconify-icon icon="solar:bag-3-linear" className="text-base" />
-            </a>
           </div>
         </div>
       </div>
