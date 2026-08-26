@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyCredentials, createSessionCookie } from '../../../lib/auth';
+import { verifyCredentials, createSessionCookie, isAuthConfigured } from '../../../lib/auth';
 import {
   getClientIp,
   checkRateLimit,
@@ -7,7 +7,18 @@ import {
   clearAttempts,
 } from '../../../lib/rateLimit';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req) {
+  // Fail-safe : admin désactivé tant que les identifiants ne sont pas
+  // configurés (voir lib/auth.js).
+  if (!isAuthConfigured()) {
+    return NextResponse.json(
+      { ok: false, error: 'Administration désactivée : identifiants non configurés sur le serveur.' },
+      { status: 503 }
+    );
+  }
+
   const ip = getClientIp(req);
 
   // Anti force-brute : bloque l'IP au-delà de 5 tentatives / 15 min.

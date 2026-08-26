@@ -28,10 +28,20 @@ export default function AdminApp() {
   const reload = useCallback(async () => {
     setLoadingData(true);
     try {
+      // Récupère du JSON en douceur : réponse non-JSON (erreur serveur) → {}
+      // au lieu d'une exception « JSON.parse », et 401 → retour au login.
+      const get = async (path) => {
+        const r = await fetch(path, { cache: 'no-store' });
+        if (r.status === 401) {
+          setAuthed(false);
+          throw new Error('Session expirée');
+        }
+        return r.json().catch(() => ({}));
+      };
       const [d, c, p] = await Promise.all([
-        fetch('/api/admin/dishes', { cache: 'no-store' }).then((r) => r.json()),
-        fetch('/api/admin/categories', { cache: 'no-store' }).then((r) => r.json()),
-        fetch('/api/admin/promos', { cache: 'no-store' }).then((r) => r.json()),
+        get('/api/admin/dishes'),
+        get('/api/admin/categories'),
+        get('/api/admin/promos'),
       ]);
       setData({
         dishes: d.dishes || [],

@@ -1,5 +1,5 @@
 import { verifySession } from '../../../../../lib/auth';
-import { getDb } from '../../../../../lib/firebase-admin';
+import { getDb, IS_FIRESTORE_REST } from '../../../../../lib/firebase-admin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,6 +33,11 @@ export async function GET(req) {
   }
   if (!process.env.FIREBASE_PROJECT_ID) {
     return new Response('Firebase non configuré.', { status: 503 });
+  }
+  // onSnapshot (watch temps réel) exige gRPC : indisponible sous Cloudflare
+  // Workers (mode REST). Le client détecte l'échec et poll /api/admin/orders.
+  if (IS_FIRESTORE_REST) {
+    return new Response('Temps réel indisponible sur cet hébergement.', { status: 503 });
   }
 
   const headers = {

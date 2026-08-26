@@ -25,6 +25,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# cloudflare / open-next (générés par `opennextjs-cloudflare build`)
+.open-next
+.wrangler
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -45,3 +49,9 @@ next-env.d.ts
 # build opennext (généré par npx opennextjs-cloudflare build)
 /.open-next/
 /.wrangler/
+
+# hébergement précédent
+.vercel
+
+# variables d'environnement (toutes variantes)
+.env*
