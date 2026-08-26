@@ -3,6 +3,15 @@ main = ".open-next/worker.js"
 compatibility_date = "2024-09-23"
 compatibility_flags = [ "nodejs_compat" ]
 
+# ---------------------------------------------------------------------------
+# BUILD — Workers Builds (intégration git Cloudflare) exécute `wrangler deploy`
+# à chaque push. Cette section fait générer le worker AVANT le deploy :
+# sans elle, .open-next/ n'existe pas en CI (gitignoré) et wrangler échoue
+# avec « entry-point file at .open-next/worker.js was not found ».
+# ---------------------------------------------------------------------------
+[build]
+command = "npm run build:worker"
+
 [assets]
 directory = ".open-next/assets"
 
