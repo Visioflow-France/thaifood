@@ -20,6 +20,7 @@ const FALLBACK_POLL_MS = 10000; // synchronisation des commandes (toutes les 10 
 const PRINTED_KEY = 'tf77_printed_orders';
 const SEED_KEY = 'tf77_printed_seeded';
 const AUTOPRINT_KEY = 'tf77_autoprint';
+const SOUND_KEY = 'tf77_order_sound';
 const RECENT_MS = 15 * 60 * 1000; // fenêtre « commande récente » au 1er chargement
 
 // Statuts affichables (libellé + couleur). L'ordre = flux logique.
@@ -172,26 +173,41 @@ function escapeHtml(s) {
     .replace(/>/g, '&gt;');
 }
 
-// Ouvre une iframe masquée, y écrit le ticket et lance l'impression.
-function printTicket(order, site) {
-  if (typeof window === 'undefined' || !order) return;
+// Envoie un (ou plusieurs) ticket(s) à RawBT via le schéma rawbt:.
+// ⚠️ Chrome n'autorise ce protocole que sur un GESTE UTILISATEUR (clic) —
+// une navigation programmatique (polling/SSE) est bloquée avec l'erreur
+// « Not allowed to launch custom protocol because a user gesture is required ».
+// On tente quand même l'auto (certains kiosques/WebView l'autorisent) et on
+// propose un bouton de secours (voir printPendingRef) si elle est bloquée.
+//
+// Plusieurs commandes = UN SEUL envoi : chaque window.location.href écrase le
+// précédent, donc on concatène les tickets avec une séparation claire.
+function printTicket(orderOrOrders, site) {
+  if (typeof window === 'undefined' || !orderOrOrders) return;
+  const orders = Array.isArray(orderOrOrders) ? orderOrOrders.filter(Boolean) : [orderOrOrders];
+  if (orders.length === 0) return;
 
-  // On récupère le contenu généré par ton modèle de ticket
-  const ticketContent = buildTicket ? buildTicket(order, site) : '';
+  const SEP = '\n\n' + '='.repeat(W) + '\n\n';
+  const allText = orders
+    .map((order) => {
+      // On récupère le contenu généré par le modèle de ticket
+      const ticketContent = buildTicket(order, site);
 
-  // Nettoyage rapide du HTML pour garder du texte propre pour RawBT
-  const cleanText = ticketContent
-    .replace(/<style([\s\S]*?)<\/style>/gi, '')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n')
-    .replace(/<\/div>/gi, '\n')
-    .replace(/<\/tr>/gi, '\n')
-    .replace(/<\/h[1-6]>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .trim();
+      // Nettoyage rapide du HTML pour garder du texte propre pour RawBT
+      return ticketContent
+        .replace(/<style([\s\S]*?)<\/style>/gi, '')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n')
+        .replace(/<\/div>/gi, '\n')
+        .replace(/<\/tr>/gi, '\n')
+        .replace(/<\/h[1-6]>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .trim();
+    })
+    .join(SEP);
 
-  // Envoi direct à RawBT
-window.location.href = `rawbt:${encodeURIComponent(cleanText || `Commande #${order.ref || order.id}`)}`;
+  // Envoi direct à RawBT (une seule navigation pour tout le lot).
+  window.location.href = `rawbt:${encodeURIComponent(allText || `Commande #${orders.map((o) => o.ref || o.id).join(', ')}`)}`;
 }
 
 // Marque une commande « imprimée » côté serveur (fire-and-forget, idempotent).
@@ -250,24 +266,37 @@ function unlockAudio() {
   }
 }
 
-// Petit bip d'alerte (WebAudio). Silencieux si le contexte audio est verrouillé.
+// Sonnerie d'alerte « ding-dong » (WebAudio) répétée 3 fois pour être sûre
+// d'être entendue en cuisine. Silencieuse si le contexte audio est verrouillé
+// (le déverrouillage se fait au premier clic, voir unlockAudio).
 let _audio;
-function beep() {
+function playChime() {
   try {
     _audio = _audio || new (window.AudioContext || window.webkitAudioContext)();
     if (_audio.state === 'suspended') _audio.resume();
-    const o = _audio.createOscillator();
-    const g = _audio.createGain();
-    o.type = 'sine';
-    o.frequency.value = 880;
-    g.gain.value = 0.0001;
-    o.connect(g);
-    g.connect(_audio.destination);
-    const t = _audio.currentTime;
-    g.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
-    o.start(t);
-    o.stop(t + 0.55);
+    const NOTES = [
+      // [fréquence Hz, départ s, durée s] — deux notes × 3 répétitions.
+      [988, 0.0, 0.18],  // Si5 — ding
+      [784, 0.22, 0.3],  // Sol5 — dong
+      [988, 0.62, 0.18],
+      [784, 0.84, 0.3],
+      [988, 1.24, 0.18],
+      [784, 1.46, 0.3],
+    ];
+    for (const [freq, start, dur] of NOTES) {
+      const o = _audio.createOscillator();
+      const g = _audio.createGain();
+      o.type = 'sine';
+      o.frequency.value = freq;
+      o.connect(g);
+      g.connect(_audio.destination);
+      const t = _audio.currentTime + start;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.start(t);
+      o.stop(t + dur + 0.02);
+    }
   } catch {
     /* audio indisponible : on ignore */
   }
@@ -280,16 +309,22 @@ export default function OrdersManager() {
   const [site, setSite] = useState(null);
   const [loading, setLoading] = useState(true);
   const [autoPrint, setAutoPrint] = useState(true);
+  const [soundOn, setSoundOn] = useState(true);
   const [range, setRange] = useState('all'); // 'all' | 'today' | '7d'
   const [toast, setToast] = useState(''); // "Nouvelle commande TF-XXXX"
   const [err, setErr] = useState('');
   const [info, setInfo] = useState(''); // bandeau informatif (mode polling = normal)
   const printedRef = useRef(new Set());
   const seededRef = useRef(false);
+  // Tickets en attente d'impression : remplis par l'auto (si Chrome la bloque),
+  // vidés par le clic sur le bouton de la bannière (gesture valide l'impression).
+  const [pendingPrint, setPendingPrint] = useState([]);
   // Refs pour éviter les closures périmées dans les callbacks temps réel (SSE).
   const autoPrintRef = useRef(autoPrint);
+  const soundRef = useRef(soundOn);
   const siteRef = useRef(site);
   useEffect(() => { autoPrintRef.current = autoPrint; }, [autoPrint]);
+  useEffect(() => { soundRef.current = soundOn; }, [soundOn]);
   useEffect(() => { siteRef.current = site; }, [site]);
 
   // Charge les infos du site (pour l'en-tête du ticket) + préférence d'impression.
@@ -307,6 +342,8 @@ export default function OrdersManager() {
       }
       const ap = localStorage.getItem(AUTOPRINT_KEY);
       if (ap !== null) setAutoPrint(ap === '1');
+      const sd = localStorage.getItem(SOUND_KEY);
+      if (sd !== null) setSoundOn(sd === '1');
     } catch {
       /* localStorage indisponible */
     }
@@ -318,17 +355,24 @@ export default function OrdersManager() {
     } catch {}
   }
 
-  // Imprime un lot de nouvelles commandes + notifie (bip + bandeau).
+  // Imprime un lot de nouvelles commandes + notifie (sonnerie + bandeau).
+  // Le son est indépendant de l'impression : il joue dès que soundRef est actif.
+  // Impression : on tente l'auto (peut être bloquée par Chrome sans gesture) ;
+  // dans ce cas les tickets restent dans pendingPrint → bannière avec bouton.
   const printAndNotify = useCallback((batch) => {
-    batch.forEach((o) => {
-      printedRef.current.add(o.ref);
-      printTicket(o, siteRef.current);
-      markPrintedServer(o.ref);
-    });
+    batch.forEach((o) => printedRef.current.add(o.ref));
     persist();
-    beep();
+    if (soundRef.current) playChime();
+    if (autoPrintRef.current) {
+      printTicket(batch, siteRef.current); // tentative auto (une seule navigation)
+      // On suppose l'impression partie ; si Chrome l'a bloquée, l'opérateur
+      // utilise « Ticket » sur la carte ou la bannière ci-dessous.
+    }
+    batch.forEach((o) => markPrintedServer(o.ref));
     setToast(`Nouvelle commande : ${batch.map(orderLabel).join(', ')}`);
     setTimeout(() => setToast(''), 8000);
+    // Statut partagé par la bannière « À imprimer » (secours anti-blocage Chrome).
+    setPendingPrint((prev) => [...prev, ...batch.filter((o) => !prev.some((p) => p.ref === o.ref))]);
   }, []);
 
   // Ingestion d'une liste complète (init SSE ou refresh manuel).
@@ -352,7 +396,7 @@ export default function OrdersManager() {
         const recent = list.filter(
           (o) => AUTO_PRINT_STATUSES.includes(o.status) && !printedRef.current.has(o.ref)
         );
-        if (recent.length && autoPrintRef.current) printAndNotify(recent);
+        if (recent.length) printAndNotify(recent);
         return;
       }
       const fresh = list.filter(
@@ -361,7 +405,7 @@ export default function OrdersManager() {
           !o.printedAt &&
           !printedRef.current.has(o.ref)
       );
-      if (fresh.length && autoPrintRef.current) printAndNotify(fresh);
+      if (fresh.length) printAndNotify(fresh);
     },
     [printAndNotify]
   );
@@ -435,7 +479,7 @@ export default function OrdersManager() {
             next.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
             return next;
           });
-          // Impression auto sur ajout/modification d'une commande payée.
+          // Impression auto + sonnerie sur ajout/modification d'une commande effective.
           const toPrint = changes
             .filter(
               (ch) =>
@@ -446,7 +490,7 @@ export default function OrdersManager() {
                 !printedRef.current.has(ch.order.ref)
             )
             .map((ch) => ch.order);
-          if (toPrint.length && autoPrintRef.current) printAndNotify(toPrint);
+          if (toPrint.length) printAndNotify(toPrint);
         } catch {}
       });
       es.onerror = () => {
@@ -477,6 +521,13 @@ export default function OrdersManager() {
     try { localStorage.setItem(AUTOPRINT_KEY, v ? '1' : '0'); } catch {}
   }
 
+  function toggleSound(v) {
+    setSoundOn(v);
+    try { localStorage.setItem(SOUND_KEY, v ? '1' : '0'); } catch {}
+    // Feedback immédiat : on entend le son qu'on vient d'activer.
+    if (v) playChime();
+  }
+
   async function changeStatus(order, status) {
     try {
       await api(`/api/admin/orders/${encodeURIComponent(order.ref)}`, 'PATCH', { status });
@@ -493,14 +544,10 @@ export default function OrdersManager() {
   }
 
  function testPrint() {
-  const ticketText = 
-    "   THAI FOOD 77   \n" +
-    "------------------\n" +
-    "TEST D'IMPRESSION\n" +
-    "Imprimante Epson OK\n" +
-    "------------------\n\n\n";
-
- window.location.href = `rawbt:${encodeURIComponent(ticketText)}`;
+  // Joue aussi la sonnerie pour tester son + impression d'un coup.
+  // Appelé depuis un clic = geste utilisateur → le schéma rawbt: passe toujours.
+  playChime();
+  printTicket(sampleOrder(), site);
 }
 
   // Filtre d'historique par plage de dates.
@@ -548,6 +595,16 @@ export default function OrdersManager() {
           <label className="flex items-center gap-2 text-xs text-cream-50/70 cursor-pointer select-none bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2">
             <input
               type="checkbox"
+              checked={soundOn}
+              onChange={(e) => toggleSound(e.target.checked)}
+              className="accent-[#c9a96e]"
+            />
+            <iconify-icon icon="solar:speaker-linear" className="text-sm text-gold-400" />
+            Son commande
+          </label>
+          <label className="flex items-center gap-2 text-xs text-cream-50/70 cursor-pointer select-none bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2">
+            <input
+              type="checkbox"
               checked={autoPrint}
               onChange={(e) => toggleAutoPrint(e.target.checked)}
               className="accent-[#c9a96e]"
@@ -591,6 +648,38 @@ export default function OrdersManager() {
         ))}
         <span className="text-xs text-cream-50/40 ml-1">{shown.length} commande(s)</span>
       </div>
+
+      {/* Tickets bloqués par Chrome (pas de geste utilisateur) : bannière de
+          secours. UN clic = impression garantie (gesture valide le rawbt:). */}
+      {pendingPrint.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm text-amber-200 bg-amber-400/10 border border-amber-400/40 rounded-lg px-3 py-2.5">
+          <div className="flex items-center gap-2">
+            <iconify-icon icon="solar:printer-linear" className="text-base text-amber-300 animate-pulse" />
+            <span>
+              {pendingPrint.length} ticket(s) prêt(s) — cliquez pour lancer l&apos;impression&nbsp;:
+              {' '}{pendingPrint.map(orderLabel).join(', ')}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                printTicket(pendingPrint, site);
+                setPendingPrint([]);
+              }}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-400 text-th-950 hover:bg-amber-300 transition-colors"
+            >
+              🖨 Imprimer maintenant
+            </button>
+            <button
+              onClick={() => setPendingPrint([])}
+              className="px-2 py-1.5 text-xs text-amber-200/70 hover:text-amber-200"
+              title="Masquer sans imprimer (les cartes gardent le bouton Ticket)"
+            >
+              Ignorer
+            </button>
+          </div>
+        </div>
+      )}
 
       {toast && (
         <div className="mb-4 flex items-center gap-2 text-sm text-gold-200 bg-gold-400/10 border border-gold-400/30 rounded-lg px-3 py-2">
