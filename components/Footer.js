@@ -128,6 +128,17 @@ export default function Footer() {
               Allergènes
             </a>
             <span className="hidden sm:inline">Fait avec passion à Pontault-Combault.</span>
+            <a
+              href="https://visioflow.fr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-gold-400 transition-colors"
+              title="Site internet créé par Visioflow — agence web"
+            >
+              <iconify-icon icon="solar:code-linear" className="text-sm" />
+              Site créé par
+              <span className="font-medium text-cream-50/50">Visioflow</span>
+            </a>
           </div>
         </div>
       </div>

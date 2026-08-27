@@ -19,8 +19,16 @@ export default function Hero() {
       <div className="hero-overlay absolute inset-0" />
       <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pb-20 sm:pb-28 pt-32 w-full">
         <div className="max-w-2xl">
-          <div className="reveal section-label mb-6">
-            Restaurant Thaïlandais — Pontault-Combault
+          <div className="reveal mb-6 flex flex-wrap items-center gap-3">
+            <span className="section-label">Restaurant Thaïlandais — Pontault-Combault</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/40 bg-gold-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-gold-400">
+              <iconify-icon icon="mdi:check-decagram" className="text-sm" />
+              Halal
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-cream-50/25 bg-cream-50/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cream-50/80">
+              <iconify-icon icon="mdi:chef-hat" className="text-sm" />
+              Fait maison
+            </span>
           </div>
           {phone ? (
             <a

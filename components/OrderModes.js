@@ -1,6 +1,7 @@
 'use client';
 
 import useReveal from './useReveal';
+import { MIN_DELIVERY_ORDER, formatPrice } from '../lib/pricing';
 
 // Deux façons de commander : ce site (paiement en ligne à la commande,
 // livraison) et thaifood77340.com (paiement à la livraison).
@@ -16,7 +17,8 @@ export default function OrderModes() {
             Livraison : deux façons de payer
           </h2>
           <p className="reveal reveal-delay-2 mt-4 text-cream-50/40 font-light max-w-lg mx-auto">
-            Le même menu livré chez vous, deux modes de paiement : à vous de choisir.
+            Le même menu livré chez vous dès {formatPrice(MIN_DELIVERY_ORDER)} de commande,
+            deux modes de paiement : à vous de choisir.
           </p>
         </div>
 

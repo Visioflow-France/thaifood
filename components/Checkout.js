@@ -9,6 +9,7 @@ import {
   formatPrice,
   DELIVERY_FEE,
   FREE_DELIVERY_THRESHOLD,
+  MIN_DELIVERY_ORDER,
 } from '../lib/pricing';
 
 // ============================================================================
@@ -35,6 +36,9 @@ const EMPTY = {
   floor: '',
   notes: '',
 };
+
+// Arrondi à 2 décimales (affichage du montant manquant pour la livraison).
+const _round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
 export default function Checkout() {
   const { items, placeOrder } = useCart();
@@ -64,6 +68,9 @@ export default function Checkout() {
   const totals = computeTotals(items, type, { postalCode: form.postalCode, city: form.city });
   const count = items.reduce((s, i) => s + i.qty, 0);
   const freeDelivery = type === 'delivery' && totals.deliveryFee === 0;
+  // La livraison exige un montant minimum de commande (hors frais).
+  const belowDeliveryMin = type === 'delivery' && totals.subtotal < MIN_DELIVERY_ORDER;
+  const missingForDelivery = _round2(MIN_DELIVERY_ORDER - totals.subtotal);
   // Le paiement en ligne ne s'applique qu'à la livraison : le retrait se règle
   // sur place, même quand Stripe est actif.
   const willPayOnline = onlinePayment && type === 'delivery';
@@ -98,6 +105,12 @@ export default function Checkout() {
     const e = validate();
     setErrors(e);
     if (Object.keys(e).length > 0) return;
+    if (belowDeliveryMin) {
+      setServerError(
+        `La livraison est possible uniquement à partir de ${formatPrice(MIN_DELIVERY_ORDER)} de commande.`
+      );
+      return;
+    }
 
     setSubmitting(true);
     const res = await placeOrder({
@@ -127,7 +140,7 @@ export default function Checkout() {
               onClick={() => setType('delivery')}
               icon="solar:scooter-linear"
               title="Livraison"
-              hint={`Gratuite à Pontault dès ${formatPrice(FREE_DELIVERY_THRESHOLD)} · ${formatPrice(DELIVERY_FEE)} ailleurs`}
+              hint={`Dès ${formatPrice(MIN_DELIVERY_ORDER)} de commande · Gratuite à Pontault dès ${formatPrice(FREE_DELIVERY_THRESHOLD)}`}
             />
           </div>
 
@@ -137,6 +150,19 @@ export default function Checkout() {
               <span>
                 Vous réglerez <strong className="font-medium text-gold-300">sur place</strong> au moment de
                 récupérer votre commande (espèces ou carte).
+              </span>
+            </div>
+          )}
+
+          {belowDeliveryMin && (
+            <div className="mt-3 flex items-start gap-2 text-[12px] text-amber-200/90 bg-amber-400/[0.07] border border-amber-400/30 rounded-lg px-3 py-2.5">
+              <iconify-icon icon="solar:scooter-linear" className="text-base mt-0.5 text-amber-300 shrink-0" />
+              <span>
+                La livraison est possible uniquement à partir de{' '}
+                <strong className="font-medium text-amber-200">{formatPrice(MIN_DELIVERY_ORDER)}</strong> de
+                commande. Ajoutez encore{' '}
+                <strong className="font-medium text-amber-200">{formatPrice(missingForDelivery)}</strong>{' '}
+                ou choisissez le retrait sur place.
               </span>
             </div>
           )}
@@ -313,7 +339,7 @@ export default function Checkout() {
 
         <button
           type="submit"
-          disabled={submitting || closed}
+          disabled={submitting || closed || belowDeliveryMin}
           className="cta-primary w-full py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {submitting ? (

@@ -1,5 +1,5 @@
 import './globals.css';
-import { SITE_URL, NAP, GEO } from '../lib/seo';
+import { SITE_URL, NAP, GEO, CREATOR } from '../lib/seo';
 
 // ============================================================================
 //  MÉTADONNÉES SEO GLOBALES (Next.js Metadata API).
@@ -63,12 +63,14 @@ export const metadata = {
     icon: '/icon.svg',
     apple: '/icon.svg',
   },
-  // Balises géo (SEO local) — via metadata.other (le plus propre en App Router).
+  // Balises géo (SEO local) + crédit agence — via metadata.other (le plus propre en App Router).
   other: {
     'geo.region': NAP.region,
     'geo.placename': NAP.city,
     'geo.position': `${GEO.latitude};${GEO.longitude}`,
     ICBM: `${GEO.latitude}, ${GEO.longitude}`,
+    designer: CREATOR.name,
+    generator: `Site créé par ${CREATOR.name} — ${CREATOR.url}`,
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
