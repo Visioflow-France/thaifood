@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from './api';
 import { Btn, Card, Select } from './ui';
 import { formatPrice } from '../../lib/pricing';
@@ -72,6 +72,48 @@ function relTime(iso) {
   if (s < 3600) return `il y a ${Math.floor(s / 60)} min`;
   if (s < 86400) return `il y a ${Math.floor(s / 3600)} h`;
   return formatDateTime(iso);
+}
+
+// --- Services (midi / soir) --------------------------------------------------
+// Créneaux du restaurant en heure de Paris. Le filtre « service » n'affiche que
+// les commandes du service en cours (ou du prochain service hors créneau) : la
+// sélection suit l'horaire automatiquement, sans intervention de l'opérateur.
+
+const TZ = 'Europe/Paris';
+const SERVICES = [
+  { id: 'midi', start: 12 * 60, end: 15 * 60 }, // 12h00 → 15h00
+  { id: 'soir', start: 18 * 60 + 30, end: 23 * 60 }, // 18h30 → 23h00
+];
+
+// Date/heure Paris d'un instant : { day: 'YYYY-MM-DD', minutes: minutes depuis minuit }.
+function parisParts(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  const m = d
+    .toLocaleString('sv-SE', { timeZone: TZ, hour12: false })
+    .match(/^(\d{4}-\d{2}-\d{2}) (\d{2}):(\d{2})/);
+  if (!m) return null;
+  return { day: m[1], minutes: (Number(m[2]) % 24) * 60 + Number(m[3]) };
+}
+
+// 720 → « 12h », 1110 → « 18h30 » (libellé compact des créneaux).
+const hm = (min) => `${Math.floor(min / 60)}h${min % 60 ? String(min % 60).padStart(2, '0') : ''}`;
+
+// Service à afficher selon l'heure courante : le service en cours, sinon le
+// prochain (avant 12h → midi du jour ; à partir de 15h → soir du jour, y
+// compris après la fermeture pour garder la main sur les commandes du soir).
+function serviceFor(iso) {
+  const now = parisParts(iso) || { day: '', minutes: 0 };
+  const active = now.minutes < SERVICES[0].end ? SERVICES[0] : SERVICES[1];
+  return { ...active, day: now.day, label: `Service ${active.id} · ${hm(active.start)}–${hm(active.end)}` };
+}
+
+// Une commande appartient au service si sa date (prévue si renseignée, sinon
+// création) tombe dans le créneau du même jour.
+function inService(o, svc) {
+  const t = parisParts(o.scheduledFor || o.createdAt);
+  return !!t && t.day === svc.day && t.minutes >= svc.start && t.minutes < svc.end;
 }
 
 // --- Impression du ticket ---------------------------------------------------
@@ -266,37 +308,79 @@ function unlockAudio() {
   }
 }
 
-// Sonnerie d'alerte « ding-dong » (WebAudio) répétée 3 fois pour être sûre
-// d'être entendue en cuisine. Silencieuse si le contexte audio est verrouillé
-// (le déverrouillage se fait au premier clic, voir unlockAudio).
+// Sonnerie type TÉLÉPHONE FIXE (WebAudio) : « dring-dring » métallique avec
+// trille rapide (le marteau frappe alternativement deux cloches), dans le
+// médium — perçant sans être aigu. Silencieuse si le contexte audio est
+// verrouillé (déverrouillage au 1er clic, unlockAudio).
+//
+// Timbre : deux ondes carrées désaccordées (640/830 Hz) modulées en amplitude
+// à 20 Hz (trille du marteau) + compresseur de sortie pour protéger contre la
+// saturation si deux sonneries se chevauchent (2 commandes d'un coup).
 let _audio;
+let _master;
+function chimeVolume() {
+  try {
+    return Number(localStorage.getItem('tf77_chime_vol')) || 0.75;
+  } catch {
+    return 0.75;
+  }
+}
+// Une sonnerie « dring » de `dur` secondes démarrée à l'instant absolu t0.
+function ringSegment(t0, dur, vol) {
+  // Deux cloches légèrement désaccordées → timbre métallique de sonnerie.
+  const o1 = _audio.createOscillator();
+  const o2 = _audio.createOscillator();
+  o1.type = 'square';
+  o2.type = 'square';
+  o1.frequency.value = 640; // cloche grave
+  o2.frequency.value = 830; // cloche aiguë (médium, pas stridente)
+
+  // Trille à 20 Hz : gain oscillant 0 → 0.5, comme le marteau alterné.
+  const trem = _audio.createGain();
+  trem.gain.value = 0.25;
+  const lfo = _audio.createOscillator();
+  lfo.frequency.value = 20;
+  const depth = _audio.createGain();
+  depth.gain.value = 0.25;
+  lfo.connect(depth);
+  depth.connect(trem.gain);
+
+  // Enveloppe : attaque et extinction courtes (pas de claquement).
+  const env = _audio.createGain();
+  env.gain.setValueAtTime(0.0001, t0);
+  env.gain.exponentialRampToValueAtTime(vol, t0 + 0.01);
+  env.gain.setValueAtTime(vol, t0 + dur - 0.04);
+  env.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+  o1.connect(trem);
+  o2.connect(trem);
+  trem.connect(env);
+  env.connect(_master);
+
+  const tEnd = t0 + dur + 0.02;
+  o1.start(t0); o1.stop(tEnd);
+  o2.start(t0); o2.stop(tEnd);
+  lfo.start(t0); lfo.stop(tEnd);
+}
 function playChime() {
   try {
     _audio = _audio || new (window.AudioContext || window.webkitAudioContext)();
     if (_audio.state === 'suspended') _audio.resume();
-    const NOTES = [
-      // [fréquence Hz, départ s, durée s] — deux notes × 3 répétitions.
-      [988, 0.0, 0.18],  // Si5 — ding
-      [784, 0.22, 0.3],  // Sol5 — dong
-      [988, 0.62, 0.18],
-      [784, 0.84, 0.3],
-      [988, 1.24, 0.18],
-      [784, 1.46, 0.3],
-    ];
-    for (const [freq, start, dur] of NOTES) {
-      const o = _audio.createOscillator();
-      const g = _audio.createGain();
-      o.type = 'sine';
-      o.frequency.value = freq;
-      o.connect(g);
-      g.connect(_audio.destination);
-      const t = _audio.currentTime + start;
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.start(t);
-      o.stop(t + dur + 0.02);
+    // Chaîne maître (créée une fois) : compresseur → sortie. Il plafonne le
+    // niveau quand plusieurs sonneries se superposent (pas de clipping).
+    if (!_master) {
+      const comp = _audio.createDynamicsCompressor();
+      comp.threshold.value = -12;
+      comp.ratio.value = 6;
+      comp.connect(_audio.destination);
+      _master = _audio.createGain();
+      _master.connect(comp);
     }
+    const vol = chimeVolume();
+    // Cadence téléphone : « dring —— dring » (deux sonneries, court silence).
+    const t = _audio.currentTime;
+    ringSegment(t + 0.0, 0.9, vol);
+    ringSegment(t + 1.25, 0.9, vol);
   } catch {
     /* audio indisponible : on ignore */
   }
@@ -310,7 +394,7 @@ export default function OrdersManager() {
   const [loading, setLoading] = useState(true);
   const [autoPrint, setAutoPrint] = useState(true);
   const [soundOn, setSoundOn] = useState(true);
-  const [range, setRange] = useState('all'); // 'all' | 'today' | '7d'
+  const [range, setRange] = useState('all'); // 'all' | 'today' | '7d' | 'service'
   const [toast, setToast] = useState(''); // "Nouvelle commande TF-XXXX"
   const [err, setErr] = useState('');
   const [info, setInfo] = useState(''); // bandeau informatif (mode polling = normal)
@@ -552,7 +636,7 @@ export default function OrdersManager() {
 
   // Filtre d'historique par plage de dates.
   function inRange(o) {
-    if (range === 'all') return true;
+    if (range === 'all' || range === 'service') return true; // 'service' → filtré par inService
     const t = o.createdAt ? new Date(o.createdAt).getTime() : 0;
     if (!t) return false;
     if (range === 'today') {
@@ -562,11 +646,20 @@ export default function OrdersManager() {
     return Date.now() - t < 7 * 86400000; // '7d'
   }
 
+  // Service courant (12h–15h ou 18h30–23h, heure de Paris) : recalculé à
+  // chaque rendu pour suivre l'horaire sans avoir à recharger la page.
+  const service = useMemo(() => serviceFor(new Date().toISOString()), [orders]);
+
   // Les livraisons non payées (awaiting_payment) ou en échec (failed) ne sont
   // pas affichées : une livraison n'apparaît que lorsqu'elle est effectivement
   // payée. Les documents restent en base (retour client sur la page /commande).
   const HIDDEN_STATUSES = new Set(['awaiting_payment', 'failed']);
-  const shown = orders.filter((o) => inRange(o) && !HIDDEN_STATUSES.has(o.status));
+  const shown = orders.filter(
+    (o) =>
+      (range !== 'service' || inService(o, service)) &&
+      inRange(o) &&
+      !HIDDEN_STATUSES.has(o.status)
+  );
   const newCount = orders.filter(
     (o) => AUTO_PRINT_STATUSES.includes(o.status) && !o.printedAt
   ).length;
@@ -630,13 +723,15 @@ export default function OrdersManager() {
       {/* Filtres d'historique */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {[
-          { id: 'all', label: 'Tout l’historique' },
+          { id: 'service', label: 'Service', title: `Uniquement les commandes du service courant (${service.label})` },
           { id: 'today', label: "Aujourd’hui" },
           { id: '7d', label: '7 derniers jours' },
+          { id: 'all', label: 'Tout l’historique' },
         ].map((r) => (
           <button
             key={r.id}
             onClick={() => setRange(r.id)}
+            title={r.title}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
               range === r.id
                 ? 'bg-gold-400 text-th-950 border-gold-400'
