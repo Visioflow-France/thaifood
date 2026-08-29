@@ -116,6 +116,26 @@ function inService(o, svc) {
   return !!t && t.day === svc.day && t.minutes >= svc.start && t.minutes < svc.end;
 }
 
+// Service d'appartenance d'une commande (pour le regroupement de la liste) :
+// avant 15h → midi (index 0), ensuite → soir (index 1), même logique que
+// serviceFor. Les dates illisibles partent en fin de liste.
+function orderServiceKey(o) {
+  const t = parisParts(o.scheduledFor || o.createdAt);
+  if (!t) return { day: '0000-00-00', idx: 0 };
+  return { day: t.day, idx: t.minutes < SERVICES[0].end ? 0 : 1 };
+}
+
+// Libellé lisible d'un jour « YYYY-MM-DD » (Paris) : Aujourd'hui / Hier / date.
+function dayLabel(day) {
+  const today = parisParts(new Date().toISOString())?.day || '';
+  if (day === today) return 'Aujourd’hui';
+  const y = new Date();
+  y.setDate(y.getDate() - 1);
+  if (day === parisParts(y.toISOString())?.day) return 'Hier';
+  const [yy, mm, dd] = day.split('-');
+  return dd && mm && yy ? `${dd}/${mm}/${yy}` : day;
+}
+
 // --- Impression du ticket ---------------------------------------------------
 // Construit un ticket 80 mm (police monospace, largeur ~ 42 caractères).
 
@@ -394,7 +414,9 @@ export default function OrdersManager() {
   const [loading, setLoading] = useState(true);
   const [autoPrint, setAutoPrint] = useState(true);
   const [soundOn, setSoundOn] = useState(true);
-  const [range, setRange] = useState('all'); // 'all' | 'today' | '7d' | 'service'
+  // Ouverture directe sur le filtre « Service » (créneau courant) : c'est la
+  // vue de travail en cuisine — l'historique reste accessible en 1 clic.
+  const [range, setRange] = useState('service'); // 'service' | 'today' | '7d' | 'all'
   const [toast, setToast] = useState(''); // "Nouvelle commande TF-XXXX"
   const [err, setErr] = useState('');
   const [info, setInfo] = useState(''); // bandeau informatif (mode polling = normal)
@@ -654,12 +676,36 @@ export default function OrdersManager() {
   // pas affichées : une livraison n'apparaît que lorsqu'elle est effectivement
   // payée. Les documents restent en base (retour client sur la page /commande).
   const HIDDEN_STATUSES = new Set(['awaiting_payment', 'failed']);
-  const shown = orders.filter(
-    (o) =>
-      (range !== 'service' || inService(o, service)) &&
-      inRange(o) &&
-      !HIDDEN_STATUSES.has(o.status)
-  );
+  const shown = orders
+    .filter(
+      (o) =>
+        (range !== 'service' || inService(o, service)) &&
+        inRange(o) &&
+        !HIDDEN_STATUSES.has(o.status)
+    )
+    // Tri par service : jour (plus récent d'abord) → midi avant soir → plus
+    // récent d'abord au sein du service. Les clés sont mémoïsées pour le tri
+    // et réutilisées pour les en-têtes de groupe ci-dessous.
+    .map((o) => ({ o, k: orderServiceKey(o) }))
+    .sort((a, b) => {
+      if (a.k.day !== b.k.day) return a.k.day < b.k.day ? 1 : -1; // jour récent d'abord
+      if (a.k.idx !== b.k.idx) return a.k.idx - b.k.idx; // midi avant soir
+      return new Date(b.o.createdAt || 0) - new Date(a.o.createdAt || 0); // récent d'abord
+    });
+
+  // Regroupement pour l'affichage : [{ key, title, orders }] dans l'ordre trié.
+  const groups = shown.reduce((acc, { o, k }) => {
+    const key = `${k.day}#${k.idx}`;
+    const last = acc[acc.length - 1];
+    if (last && last.key === key) last.orders.push(o);
+    else
+      acc.push({
+        key,
+        title: `${dayLabel(k.day)} · ${SERVICES[k.idx].id === 'midi' ? 'Service midi' : 'Service soir'}`,
+        orders: [o],
+      });
+    return acc;
+  }, []);
   const newCount = orders.filter(
     (o) => AUTO_PRINT_STATUSES.includes(o.status) && !o.printedAt
   ).length;
@@ -794,7 +840,7 @@ export default function OrdersManager() {
         </div>
       )}
 
-      {/* Liste */}
+      {/* Liste — commandes groupées par service (midi avant soir, jour récent d'abord) */}
       {loading ? (
         <p className="text-cream-50/40 text-sm">Chargement des commandes…</p>
       ) : shown.length === 0 ? (
@@ -811,13 +857,31 @@ export default function OrdersManager() {
         </div>
       ) : (
         <div className="space-y-3">
-          {shown.map((o) => (
-            <OrderCard
-              key={o.id || o.ref}
-              order={o}
-              onStatusChange={(s) => changeStatus(o, s)}
-              onReprint={() => reprint(o)}
-            />
+          {groups.map((g) => (
+            <div key={g.key}>
+              {/* En-tête du groupe : jour + service + nombre de commandes */}
+              <div className="flex items-center gap-3 mt-5 mb-3 first:mt-0">
+                <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gold-400">
+                  <iconify-icon
+                    icon={g.title.includes('midi') ? 'solar:sun-linear' : 'solar:moon-stars-linear'}
+                    className="text-sm"
+                  />
+                  {g.title}
+                </span>
+                <span className="text-[11px] text-cream-50/40">{g.orders.length} commande(s)</span>
+                <span className="flex-1 h-px bg-white/[0.07]" />
+              </div>
+              <div className="space-y-3">
+                {g.orders.map((o) => (
+                  <OrderCard
+                    key={o.id || o.ref}
+                    order={o}
+                    onStatusChange={(s) => changeStatus(o, s)}
+                    onReprint={() => reprint(o)}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}
