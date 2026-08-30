@@ -420,6 +420,7 @@ export default function OrdersManager() {
   const [toast, setToast] = useState(''); // "Nouvelle commande TF-XXXX"
   const [err, setErr] = useState('');
   const [info, setInfo] = useState(''); // bandeau informatif (mode polling = normal)
+  const [refreshing, setRefreshing] = useState(false); // animation du bouton Actualiser
   const printedRef = useRef(new Set());
   const seededRef = useRef(false);
   // Tickets en attente d'impression : remplis par l'auto (si Chrome la bloque),
@@ -517,13 +518,16 @@ export default function OrdersManager() {
   );
 
   const refresh = useCallback(async () => {
+    setRefreshing(true);
     try {
-      const j = await api('/api/admin/orders');
+      const j = await api(`/api/admin/orders?_=${Date.now()}`); // cache-buster
       ingest(j.orders || []);
+      setInfo(''); // une actualisation manuelle efface le message « polling »
     } catch (e) {
       setErr(e.message);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [ingest]);
 
@@ -757,10 +761,13 @@ export default function OrdersManager() {
               Tester l’impression
             </span>
           </Btn>
-          <Btn variant="ghost" onClick={refresh}>
+          <Btn variant="ghost" onClick={refresh} disabled={refreshing}>
             <span className="inline-flex items-center gap-1.5">
-              <iconify-icon icon="solar:refresh-circle-linear" className="text-sm" />
-              Actualiser
+              <iconify-icon
+                icon="solar:refresh-circle-linear"
+                className={`text-sm ${refreshing ? 'animate-spin' : ''}`}
+              />
+              {refreshing ? 'Actualisation…' : 'Actualiser'}
             </span>
           </Btn>
         </div>

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getOrderByRef } from '../../../../lib/orders';
+import { getOrderByRef, recoverOrderIfNeeded } from '../../../../lib/orders';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,7 +18,11 @@ export async function GET(_req, { params }) {
         { status: 400 }
       );
     }
-    const order = await getOrderByRef(ref);
+    let order = await getOrderByRef(ref);
+    // Filet de sécurité : la page /commande est ouverte juste APRÈS le paiement.
+    // Si le webhook Stripe n'est pas encore arrivé (ou a été perdu), on vérifie
+    // directement auprès de Stripe → le client voit « payé » sans attendre.
+    order = (await recoverOrderIfNeeded(order)) || order;
     if (!order) {
       return NextResponse.json(
         { ok: false, error: 'Commande introuvable.' },
