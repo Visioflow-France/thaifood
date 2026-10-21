@@ -22,14 +22,19 @@ export async function POST(req) {
     }
 
     const payload = await req.json().catch(() => ({}));
-    const order = await buildOrder(payload);
+    // ⚡ Parallélisation : validation du panier et lecture des horaires sont
+    // indépendantes. Si le panier est invalide, buildOrder rejette en premier
+    // et l'erreur remonte exactement comme avant (OrderError → 400).
+    const [order, { hours }] = await Promise.all([
+      buildOrder(payload),
+      getSiteInfo(),
+    ]);
 
     // ------------------------------------------------------------------
     //  HORAIRES : on refuse la commande si le restaurant est fermé.
     //  (Le contrôle côté client est une aide visuelle ; ici c'est la vraie
     //  barrière, impossible à contourner depuis le navigateur.)
     // ------------------------------------------------------------------
-    const { hours } = await getSiteInfo();
     if (!isOpenNow(hours)) {
       throw new OrderError(
         `Le restaurant est actuellement fermé. Réouverture ${formatNextOpening(hours)}.`

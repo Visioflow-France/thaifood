@@ -1,22 +1,32 @@
 import { NextResponse } from 'next/server';
 import { verifySession } from '../../../lib/auth';
 import { getSiteInfo, saveSiteInfo, buildLegalMarkdown } from '../../../lib/site';
+import { cachedJson, CACHE_KEYS } from '../../../lib/edge-cache';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // GET public : tout ce qui sert au site public (téléphone, mentions légales,
 // champs légaux, horaires, réseaux sociaux, contenu éditable de l'accueil).
-export async function GET() {
-  const info = await getSiteInfo();
-  return NextResponse.json({
-    phone: info.phone,
-    legal: info.legal,
-    legalFields: info.legalFields,
-    hours: info.hours,
-    socials: info.socials,
-    content: info.content,
-  });
+// ⚡ CPU : réponse en cache edge (TTL 30 s) SAUF pour les sessions admin,
+// qui reçoivent toujours l'état réel (le dashboard doit voir ses modifications
+// immédiatement). La couche lib/site.js ajoute un cache serveur de 30 s.
+export async function GET(req) {
+  return cachedJson(
+    CACHE_KEYS.site,
+    async () => {
+      const info = await getSiteInfo();
+      return {
+        phone: info.phone,
+        legal: info.legal,
+        legalFields: info.legalFields,
+        hours: info.hours,
+        socials: info.socials,
+        content: info.content,
+      };
+    },
+    { ttl: 30, bypass: verifySession(req) }
+  );
 }
 
 // POST admin : met à jour un ou plusieurs champs parmi téléphone, mentions
