@@ -24,7 +24,9 @@ export async function POST(req) {
   const origin = getRequestOrigin(req);
 
   try {
-    let settings = await getSettings();
+    // Lecture FRAÎCHE (force) : décide de la CRÉATION du compte Stripe —
+    // un cache de 30 s risquerait de créer un compte en double.
+    let settings = await getSettings(true);
 
     // 1) Création du compte Standard (une seule fois).
     //    Standard : c'est le RESTAURATEUR qui porte les pertes (litiges, fraude),

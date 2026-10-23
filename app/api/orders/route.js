@@ -25,9 +25,11 @@ export async function POST(req) {
     // ⚡ Parallélisation : validation du panier et lecture des horaires sont
     // indépendantes. Si le panier est invalide, buildOrder rejette en premier
     // et l'erreur remonte exactement comme avant (OrderError → 400).
+    // Horaires lus FRAIS (force) : si le restaurateur vient de fermer, aucune
+    // commande ne doit passer pendant une fenêtre de cache.
     const [order, { hours }] = await Promise.all([
       buildOrder(payload),
-      getSiteInfo(),
+      getSiteInfo(true),
     ]);
 
     // ------------------------------------------------------------------

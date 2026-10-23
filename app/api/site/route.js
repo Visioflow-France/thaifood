@@ -9,13 +9,14 @@ export const dynamic = 'force-dynamic';
 // GET public : tout ce qui sert au site public (téléphone, mentions légales,
 // champs légaux, horaires, réseaux sociaux, contenu éditable de l'accueil).
 // ⚡ CPU : réponse en cache edge (TTL 30 s) SAUF pour les sessions admin,
-// qui reçoivent toujours l'état réel (le dashboard doit voir ses modifications
-// immédiatement). La couche lib/site.js ajoute un cache serveur de 30 s.
+// qui reçoivent toujours l'état réel (lecture Firestore fraîche, le dashboard
+// doit voir ses modifications immédiatement).
 export async function GET(req) {
+  const isAdmin = verifySession(req);
   return cachedJson(
     CACHE_KEYS.site,
     async () => {
-      const info = await getSiteInfo();
+      const info = await getSiteInfo(isAdmin); // admin → force la relecture
       return {
         phone: info.phone,
         legal: info.legal,
@@ -25,7 +26,7 @@ export async function GET(req) {
         content: info.content,
       };
     },
-    { ttl: 30, bypass: verifySession(req) }
+    { ttl: 30, bypass: isAdmin }
   );
 }
 
@@ -37,7 +38,9 @@ export async function POST(req) {
   }
   try {
     const body = await req.json().catch(() => ({}));
-    const current = await getSiteInfo();
+    // Base de fusion lue FRAÎCHE (pas de cache 30 s) : une modification récente
+    // faite depuis une autre session/isolate ne doit jamais être écrasée.
+    const current = await getSiteInfo(true);
 
     const patch = {};
 

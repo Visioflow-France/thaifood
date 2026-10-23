@@ -10,8 +10,8 @@ import { cachedBinary, CACHE_KEYS } from '../lib/edge-cache';
 //
 // ⚡ CPU : le rendu (satori + resvg) coûte plusieurs centaines de ms de CPU —
 // largement au-dessus de la limite du plan gratuit Workers. Le PNG étant 100 %
-// statique, il est généré UNE SEULE FOIS par colo puis servi depuis le cache
-// edge (caches.default) : les requêtes suivantes ne coûtent plus rien.
+// statique, il est généré ~1 fois par 24 h et par colo puis servi depuis le
+// cache edge (caches.default) : les requêtes suivantes ne coûtent plus rien.
 // Design modifié ? → incrémenter OG_CACHE_VERSION dans lib/og-image.js.
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

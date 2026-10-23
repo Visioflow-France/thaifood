@@ -15,7 +15,9 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
   }
   const stripe = getStripe();
-  const { connectedAccountId } = await getSettings();
+  // Lecture FRAÎCHE (force) : action admin juste après l'onboarding — un cache
+  // de 30 s pourrait croire à tort qu'aucun compte n'est connecté.
+  const { connectedAccountId } = await getSettings(true);
   if (!stripe || !connectedAccountId) {
     return NextResponse.json(
       { error: 'Aucun compte Stripe connecté.' },

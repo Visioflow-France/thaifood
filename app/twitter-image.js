@@ -6,7 +6,7 @@ import { cachedBinary, CACHE_KEYS } from '../lib/edge-cache';
 // <meta name="twitter:image"> (carte summary_large_image définie dans layout.js).
 // force-dynamic : voir app/opengraph-image.js (prerender @vercel/og + espace
 // dans le chemin du projet).
-// ⚡ CPU : mis en cache edge après le premier rendu (voir app/opengraph-image.js).
+// ⚡ CPU : mis en cache edge ~1×/24 h par colo (voir app/opengraph-image.js).
 // Design modifié ? → incrémenter OG_CACHE_VERSION dans lib/og-image.js.
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

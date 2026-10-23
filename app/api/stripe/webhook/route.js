@@ -79,7 +79,9 @@ async function handleEvent(event) {
 
     case 'account.updated': {
       // Statut du compte restaurateur (charges/payouts activés, KYC complété).
-      const { connectedAccountId } = await getSettings();
+      // Lecture FRAÎCHE : la comparaison de l'ID du compte ne doit pas dépendre
+      // d'un cache de 30 s (webhook peu fréquent → coût négligeable).
+      const { connectedAccountId } = await getSettings(true);
       if (connectedAccountId && data?.id === connectedAccountId) {
         await saveSettings({
           account: {

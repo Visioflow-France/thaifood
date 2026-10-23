@@ -18,7 +18,9 @@ export async function GET(req) {
     return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
   }
 
-  const settings = await getSettings();
+  // Lecture FRAÎCHE (force) : l'admin doit voir l'état réel du compte juste
+  // après l'onboarding, même si un cache de 30 s dit le contraire.
+  const settings = await getSettings(true);
   const configured = hasStripeKey();
   const stripe = getStripe();
 
