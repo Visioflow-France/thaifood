@@ -40,13 +40,18 @@ export const metadata = {
     title: 'Restaurant Thaï & Fast Food Thaï à Pontault-Combault — Thaï Food 77',
     description:
       'Cuisine thaïlandaise authentique à Pontault-Combault. Sur place ou à emporter : Pad Thaï, currys, Tom Yum préparés à la commande.',
-    // Pas d'`images` ici : générées automatiquement par app/opengraph-image.js.
+    // Image STATIQUE (public/og.png, 1200×630) : servie par Cloudflare sans
+    // invoquer le Worker → 0 ms de CPU (l'ancienne génération à la volée par
+    // next/og coûtait des centaines de ms, au-dessus de la limite du plan
+    // gratuit). Design source : lib/og-image.js.
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'Thaï Food 77 — Restaurant thaï & fast food thaï à Pontault-Combault' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Restaurant Thaï & Fast Food Thaï à Pontault-Combault — Thaï Food 77',
     description:
       'Cuisine thaïlandaise authentique à Pontault-Combault. Sur place ou à emporter.',
+    images: ['/og.png'],
   },
   robots: {
     index: true,
