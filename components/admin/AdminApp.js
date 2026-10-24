@@ -59,6 +59,13 @@ export default function AdminApp() {
     checkAuth();
   }, [checkAuth]);
 
+  // Mode appli mobile : désactive le « pull-to-refresh » (glisser vers le bas
+  // qui recharge la page par mégarde) — les commandes s'actualisent déjà
+  // toutes seules, ce geste n'apporte rien et fait « bouger » la page.
+  useEffect(() => {
+    document.body.style.overscrollBehaviorY = 'contain';
+  }, []);
+
   useEffect(() => {
     if (authed) reload();
   }, [authed, reload]);
@@ -143,7 +150,12 @@ export default function AdminApp() {
 function Shell({ children }) {
   return (
     <div className="min-h-screen bg-th-950 text-cream-50">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8 py-8">{children}</div>
+      {/* Safe-areas : en appli installée, le contenu s'étend sous les barres
+          système (encoche, indicateur home) → on compense via env(safe-area-*).
+          touch-manipulation : supprime le double-tap-zoom sur les boutons. */}
+      <div className="max-w-6xl mx-auto px-[max(1.25rem,env(safe-area-inset-left))] sm:px-[max(2rem,env(safe-area-inset-left))] pt-[calc(env(safe-area-inset-top)+2rem)] pb-[calc(env(safe-area-inset-bottom)+2rem)] touch-manipulation">
+        {children}
+      </div>
     </div>
   );
 }

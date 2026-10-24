@@ -944,7 +944,7 @@ function OrderCard({ order, onStatusChange, onReprint }) {
           <Select
             value={order.status}
             onChange={(e) => onStatusChange(e.target.value)}
-            className="py-1.5 text-xs w-auto min-w-[150px]"
+            className="py-1.5 text-base sm:text-xs w-auto min-w-[150px]"
           >
             {(STATUS_OPTIONS.includes(order.status)
               ? STATUS_OPTIONS

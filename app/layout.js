@@ -66,8 +66,14 @@ export const metadata = {
   },
   icons: {
     icon: '/icon.svg',
-    apple: '/icon.svg',
+    // Safari iOS ignore le SVG pour l'écran d'accueil → PNG 180x180 dédié.
+    apple: '/apple-touch-icon.png',
   },
+  // Manifest PWA du site vitrine (Route Handler app/manifest.webmanifest/route.js).
+  // Déclaré ICI explicitement car la convention fichier app/manifest.js a été
+  // convertie en Route Handler (elle écrasait metadata.manifest des layouts
+  // enfants). Le layout admin le SURCHARGE avec son propre manifest.
+  manifest: '/manifest.webmanifest',
   // Balises géo (SEO local) + crédit agence — via metadata.other (le plus propre en App Router).
   other: {
     'geo.region': NAP.region,

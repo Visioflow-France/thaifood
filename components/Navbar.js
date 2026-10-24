@@ -29,7 +29,16 @@ export default function Navbar() {
         className="nav-blur fixed top-0 left-0 right-0 z-50 transition-all duration-500"
       >
         <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
-          <a href="#" className="flex items-center gap-2">
+          <a href="#" className="flex items-center gap-2.5">
+            {/* Logo (même tuile que l'icône d'appli) — alt vide : le nom est
+                juste à côté, inutile de le faire lire deux fois. */}
+            <img
+              src="/icon.svg"
+              alt=""
+              width={40}
+              height={40}
+              className="w-9 h-9 sm:w-10 sm:h-10 shrink-0"
+            />
             <span className="font-serif text-xl sm:text-2xl font-semibold text-cream-50 tracking-tight">
               Thaï Food
             </span>

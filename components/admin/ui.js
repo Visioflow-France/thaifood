@@ -14,8 +14,10 @@ export function Field({ label, hint, className = '', children }) {
   );
 }
 
+// text-base (16px) sur mobile : iOS Safari ZOOME la page au focus d'un champ
+// en dessous de 16px → toute la page « saute » à chaque saisie. Desktop : 14px.
 const base =
-  'w-full bg-th-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-cream-50 placeholder-cream-50/30 focus:outline-none focus:border-gold-400/60 transition-colors';
+  'w-full bg-th-950 border border-white/10 rounded-lg px-3 py-2 text-base sm:text-sm text-cream-50 placeholder-cream-50/30 focus:outline-none focus:border-gold-400/60 transition-colors';
 
 export function Input(props) {
   return <input {...props} className={`${base} ${props.className || ''}`} />;
