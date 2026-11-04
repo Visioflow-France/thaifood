@@ -523,6 +523,7 @@ export default function OrdersManager() {
       const j = await api(`/api/admin/orders?_=${Date.now()}`); // cache-buster
       ingest(j.orders || []);
       setInfo(''); // une actualisation manuelle efface le message « polling »
+      setErr(''); // une erreur passagère ne reste pas affichée une fois rétablie
     } catch (e) {
       setErr(e.message);
     } finally {
@@ -538,6 +539,7 @@ export default function OrdersManager() {
   useEffect(() => {
     let es;
     let pollId;
+    let onVisible;
     let closed = false;
 
     const startFallback = () => {
@@ -546,7 +548,21 @@ export default function OrdersManager() {
       // fonctionnement NORMAL sous Cloudflare Workers.
       setInfo(`Synchronisation automatique toutes les ${FALLBACK_POLL_MS / 1000} s.`);
       refresh();
-      pollId = setInterval(refresh, FALLBACK_POLL_MS);
+      pollId = setInterval(() => {
+        // Pause quand l'écran est masqué (dashboard en arrière-plan, nuit…) :
+        // l'appareil dédié au comptoir ne doit pas consommer de CPU Cloudflare
+        // pour personne. Au retour de l'affichage, rafraîchissement immédiat.
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+        refresh();
+      }, FALLBACK_POLL_MS);
+      // Reprise instantanée dès que l'écran revient (pas d'attente du prochain
+      // tick) : rien à réactualiser à la main, l'état est rattrapé d'emblée.
+      if (typeof document !== 'undefined') {
+        onVisible = () => {
+          if (document.visibilityState === 'visible') refresh();
+        };
+        document.addEventListener('visibilitychange', onVisible);
+      }
     };
 
     // En prod (Cloudflare), la route stream répond 503 en mode REST : on
@@ -616,6 +632,7 @@ export default function OrdersManager() {
       closed = true;
       try { es && es.close(); } catch {}
       if (pollId) clearInterval(pollId);
+      if (onVisible) document.removeEventListener('visibilitychange', onVisible);
     };
   }, [ingest, refresh, printAndNotify]);
 
