@@ -97,6 +97,8 @@ export async function POST(req) {
           },
           metadata: { ref: order.ref, id: order.id },
           customer_email: order.customer.email || undefined,
+          // Reçu Stripe envoyé automatiquement au client après paiement réussi.
+          receipt_email: order.customer.email || undefined,
           success_url: `${origin}/commande?ref=${order.ref}`,
           cancel_url: `${origin}/commande?ref=${order.ref}&status=cancel`,
         });
